@@ -1,0 +1,18 @@
+# Nix build artifacts
+result
+.direnv/
+
+# pywal cache (generated at runtime)
+home/.cache/
+
+# matugen runtime output (generated at runtime)
+# (intentionally not ignored — you may want to commit color templates)
+
+# swappy screenshots (personal)
+wallpapers/*.jpg
+wallpapers/*.png
+wallpapers/*.webp
+!wallpapers/default.jpg
+
+# k4's own git history (we keep k4 as a plain directory, not a submodule)
+k4/.git/
