@@ -83,7 +83,7 @@ Singleton {
     //  En qué borde vive la barra. shell.qml ancla la ventana, voltea la
     //  silueta y orienta los gestos con esto; los plugins lo leen por
     //  K4.Isla.posicion para adaptar lo que pinten fuera.
-    property string posicionBarra: "arriba"     // arriba · abajo
+    property string posicionBarra: "abajo"      // arriba · abajo
     //  En qué punto del borde se centra la island, en tanto por ciento del
     //  ancho libre: 50 es el centro de siempre. Un plugin puede desplazarla
     //  TEMPORALMENTE con K4.Isla.colocar; esto es la base a la que vuelve.

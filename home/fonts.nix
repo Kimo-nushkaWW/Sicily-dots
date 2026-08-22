@@ -5,11 +5,12 @@
 
   home.packages = with pkgs; [
     # Nerd Fonts (icon-patched developer fonts)
-    (nerdfonts.override { fonts = [
-      "JetBrainsMono"   # primary coding font
-      "FiraCode"        # alternative with great ligatures
-      "Meslo"           # popular terminal font
-    ]; })
+    nerd-fonts.jetbrains-mono  # primary coding font
+    nerd-fonts.fira-code        # alternative with great ligatures
+    nerd-fonts.meslo-lg         # "MesloLGS Nerd Font Mono" — k4's iconFont
+
+    # k4 UI font — k4/core/Theme.qml hardcodes "Adwaita Sans"
+    adwaita-fonts
 
     # CJK (Chinese, Japanese, Korean) support
     noto-fonts

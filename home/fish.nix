@@ -47,7 +47,7 @@
     enableFishIntegration = true;
 
     settings = {
-      format = lib: "$all";
+      format = "$all";
 
       character = {
         success_symbol = "[❯](bold green)";

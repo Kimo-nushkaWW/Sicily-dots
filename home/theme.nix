@@ -25,19 +25,23 @@
     text = ''
       #!/usr/bin/env bash
       set -euo pipefail
-      IMG="$1"
+      IMG="$(realpath "$1")"
 
-      # 1. Set wallpaper with animated transition
+      # 1. Set wallpaper with animated transition (swww or awww)
       swww img "$IMG" \
         --transition-type grow \
         --transition-pos 0.5,0.5 \
         --transition-duration 1.2
 
-      # 2. Generate Material You palette (light + dark) and write templates
+      # 2. Generate Material You palette and write templates
       matugen image "$IMG"
 
-      # 3. Generate pywal palette (for apps not covered by matugen)
+      # 3. Generate pywal palette (for foot, other apps)
       wal --backend imagemagick -i "$IMG" -n --saturate 0.7
+
+      # 4. Tell k4's HyprTheme plugin about the new wallpaper so it tracks it
+      #    and can re-apply on next login. Silently skip if k4 isn't running.
+      qs ipc call k4.theme wallpaper "$IMG" 2>/dev/null || true
 
       echo "Theme applied: $IMG"
     '';

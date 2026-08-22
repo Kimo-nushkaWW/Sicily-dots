@@ -27,6 +27,9 @@
   # XDG base dirs
   xdg.enable = true;
 
+  # ~/.local/bin on PATH (wallpaper script, etc.)
+  home.sessionPath = [ "$HOME/.local/bin" ];
+
   # Global env vars visible to all Wayland apps
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";          # electron/chromium Wayland

@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ pkgs, config, lib, ... }:
 
 # grim + slurp + swappy screenshot stack
 # Keybinds are declared in hyprland.nix.
@@ -26,11 +26,7 @@
   '';
 
   # Make sure screenshot directory exists
-  home.activation.mkScreenshotDir = {
-    after = [ "writeBoundary" ];
-    before = [];
-    data = ''
-      mkdir -p $HOME/Pictures/Screenshots
-    '';
-  };
+  home.activation.mkScreenshotDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    mkdir -p $HOME/Pictures/Screenshots
+  '';
 }

@@ -158,7 +158,8 @@
       # ── Startup ────────────────────────────────────────────────────────────
       exec-once = [
         "swww-daemon"
-        "swww img $HOME/wallpapers/default.jpg --transition-type grow"
+        # Only load wallpaper if file exists and is non-empty (placeholder is empty)
+        "bash -c 'f=$HOME/wallpapers/default.jpg; [ -s \"$f\" ] && swww img \"$f\" --transition-type grow'"
         "wlsunset -l 37.5 -L 15.1"   # Sicily coordinates — adjust as needed
         "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
         "systemctl --user start graphical-session.target"
