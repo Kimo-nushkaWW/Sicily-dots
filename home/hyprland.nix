@@ -64,7 +64,8 @@
 
       # ── Input ──────────────────────────────────────────────────────────────
       input = {
-        kb_layout = "us";  # change to your layout
+        kb_layout = "us,ru";         # Alt+Shift toggles between English and Russian
+        kb_options = "grp:alt_shift_toggle";
         follow_mouse = 1;
         touchpad.natural_scroll = true;
         sensitivity = 0;
