@@ -39,7 +39,7 @@
   time.timeZone = "Asia/Yekaterinburg";
   i18n.defaultLocale = "ru_RU.UTF-8";
 
-  # ── GPU — AMD ────────────────────────────────────────────────────────────────
+  # ── GPU — graphics (Intel CPU, integrated or discrete) ──────────────────────
   hardware.graphics = {
     enable = true;
     enable32Bit = true;    # 32-bit Vulkan for Steam/Wine (uses mesa radv by default)

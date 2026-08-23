@@ -24,11 +24,6 @@
       options = [ "fmask=0077" "dmask=0077" ];
     };
 
-  fileSystems."/mnt/ssd" =
-    { device = "";
-      fsType = "none";
-      options = [ "bind" ];
-    };
 
   swapDevices = [ ];
 
