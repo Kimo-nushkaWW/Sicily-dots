@@ -11,7 +11,7 @@
 
 {
   home.packages = with pkgs; [
-    swww        # wallpaper daemon with animated transitions
+    awww        # wallpaper daemon (pkg renamed from swww; binary still swww) with animated transitions
     matugen     # Material You color generator
     pywal       # wal color templates
     wlsunset    # blue-light filter / color temperature

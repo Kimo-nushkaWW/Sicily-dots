@@ -8,6 +8,7 @@
   wayland.windowManager.hyprland = {
     enable = true;
     xwayland.enable = true;
+    configType = "hyprlang";   # silence stateVersion warning; we use hyprlang format
 
     settings = {
       # ── Monitors ───────────────────────────────────────────────────────────
@@ -91,11 +92,11 @@
         # Apps
         "$mod, T, exec, foot"
         "$mod, E, exec, nautilus"
-        "$mod, L, exec, hyprlock"
         "$mod, F, togglefloating"
         "$mod, Q, killactive"
         "$mod, M, exit"
-        "$mod, SPACE, fullscreen, 1"
+        # NOTE: $mod+Space → k4 launcher  (conf.d/k4.conf)
+        # NOTE: $mod+L     → k4 lock      (conf.d/k4.conf)
 
         # Window focus
         "$mod, H, movefocus, l"

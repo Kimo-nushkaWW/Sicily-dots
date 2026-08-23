@@ -57,16 +57,35 @@
     recursive = true;   # symlink each file individually → edits in-place work
   };
 
-  # ── Autostart via Hyprland exec-once ─────────────────────────────────────────
-  # Written to ~/.config/hypr/conf.d/k4.conf and imported by hyprland.nix.
-  # We use exec-once so k4 only starts once per session.
-  home.file.".config/hypr/conf.d/k4.conf".text = ''
-    # k4 Dynamic Island — started by Hyprland
-    exec-once = quickshell -p $HOME/.config/quickshell/k4
+  # ── Autostart + Hyprland rules ───────────────────────────────────────────────
+  # arrancar sets QML_IMPORT_PATH so plugins can `import K4`. Calling quickshell
+  # directly skips this and every plugin fails silently at runtime.
+  #
+  # k4.conf (from k4/hypr/k4.conf) ships with @RAIZ@ placeholders. We substitute
+  # them here at eval time and write the result into conf.d/ so Hyprland sources
+  # it automatically. The exec-once line from k4.conf is EXCLUDED — we write our
+  # own below so we don't duplicate the process on Hyprland reload.
+  home.file.".config/hypr/conf.d/k4.conf".text =
+    let
+      k4dir = "$HOME/.config/quickshell/k4";
+      k4conf = builtins.readFile ../k4/hypr/k4.conf;
+      # Strip the exec-once line from k4.conf — we write our own.
+      withoutExecOnce = builtins.replaceStrings
+        [ "exec-once = @RAIZ@/arrancar --no-duplicate -d\n" ]
+        [ "" ]
+        k4conf;
+    in
+    builtins.replaceStrings [ "@RAIZ@" ] [ k4dir ] withoutExecOnce
+    + ''
 
-    # Layer rules so Hyprland treats k4 as a shell overlay, not a window
-    layerrule = blur, k4*
-    layerrule = ignorealpha 0.5, k4*
-    layerrule = xray 0, k4*
-  '';
+      # ── Startup (managed by Nix, not k4's installer) ──────────────────────────
+      # arrancar sets QML_IMPORT_PATH for the K4 module. --no-duplicate prevents
+      # a second instance on Hyprland config reload.
+      exec-once = $HOME/.config/quickshell/k4/arrancar --no-duplicate -d
+
+      # ── Layer rules ───────────────────────────────────────────────────────────
+      layerrule = blur, k4*
+      layerrule = ignorealpha 0.5, k4*
+      layerrule = xray 0, k4*
+    '';
 }

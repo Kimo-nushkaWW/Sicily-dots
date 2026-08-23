@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, inputs, ... }:
 
 {
   imports = [ ./hardware-configuration.nix ];
@@ -15,14 +15,29 @@
     networkmanager.enable = true;
   };
 
+  systemd.services.tg-ws-proxy = {
+    description = "Telegram MTProto WS Proxy";
+    after = ["network-online.target" "nss-lookup.target"];
+    wants = ["network-online.target" "nss-lookup.target"];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      ExecStart = "${inputs.tg-ws-proxy.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/tg-ws-proxy";
+      Restart = "always";
+      RestartSec = "10s";
+      DynamicUser = true;
+      CapabilityBoundingSet = "";
+      NoNewPrivileges = true;
+    };
+  };
+
   # ── Locale / Time ────────────────────────────────────────────────────────────
-  time.timeZone = "Europe/Rome"; # change to your zone
-  i18n.defaultLocale = "en_US.UTF-8";
+  time.timeZone = "Asia/Yekaterinburg";
+  i18n.defaultLocale = "ru_RU.UTF-8";
 
   # ── GPU — AMD ────────────────────────────────────────────────────────────────
   hardware.graphics = {
     enable = true;
-    enable32Bit = true;
+    enable32Bit = true;    # 32-bit Vulkan for Steam/Wine (uses mesa radv by default)
   };
 
   # ── Audio — PipeWire ─────────────────────────────────────────────────────────
@@ -70,10 +85,29 @@
 
   # ── System packages (minimal — user packages live in home-manager) ────────────
   environment.systemPackages = with pkgs; [
-    git
-    wget
-    curl
-    vim
+    git wget curl vim
+
+    # Antigravity IDE (from antigravity-nix flake input)
+    inputs.antigravity-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
+    inputs.antigravity-nix.packages.${pkgs.stdenv.hostPlatform.system}.google-antigravity-ide
+    inputs.antigravity-nix.packages.${pkgs.stdenv.hostPlatform.system}.google-antigravity-cli
+
+    # Apps
+    kdePackages.kolourpaint
+    libreoffice-qt-stable   # replace onlyoffice if not in nixpkgs-unstable
+    unrar
+    qbittorrent
+    steam
+    discord
+
+    # Zen browser (from zen-browser flake input)
+    inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
+
+    # Telegram
+    telegram-desktop
+
+    # tg-ws-proxy (started as systemd service above; also useful on PATH)
+    inputs.tg-ws-proxy.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 
   # ── Shell ────────────────────────────────────────────────────────────────────

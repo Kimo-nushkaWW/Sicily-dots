@@ -4,56 +4,51 @@
   # ── Git ──────────────────────────────────────────────────────────────────────
   programs.git = {
     enable = true;
-    userName = "kimo";                        # change to your name
-    userEmail = "you@example.com";            # change to your email
-
-    extraConfig = {
-      init.defaultBranch = "main";
-      pull.rebase = true;
+    settings = {
+      user.name  = "kimo";                    # CHANGE to your name
+      user.email = "you@example.com";         # CHANGE to your email
+      init.defaultBranch   = "main";
+      pull.rebase          = true;
       push.autoSetupRemote = true;
-      merge.conflictstyle = "zdiff3";
-      core.editor = "codium --wait";
-    };
-
-    # delta: pretty git diffs
-    delta = {
-      enable = true;
-      options = {
-        navigate = true;
-        light = false;
-        line-numbers = true;
-        side-by-side = false;
-        syntax-theme = "Monokai Extended";
+      merge.conflictstyle  = "zdiff3";
+      core.editor          = "codium --wait";
+      alias = {
+        st      = "status -sb";
+        lg      = "log --oneline --graph --decorate --all";
+        co      = "checkout";
+        br      = "branch";
+        unstage = "reset HEAD --";
+        last    = "log -1 HEAD";
       };
     };
+  };
 
-    aliases = {
-      st = "status -sb";
-      lg = "log --oneline --graph --decorate --all";
-      co = "checkout";
-      br = "branch";
-      unstage = "reset HEAD --";
-      last = "log -1 HEAD";
+  # ── delta (git diff pager) ───────────────────────────────────────────────────
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate     = true;
+      light        = false;
+      line-numbers = true;
+      side-by-side = false;
+      syntax-theme = "Monokai Extended";
     };
   };
 
   # ── SSH ──────────────────────────────────────────────────────────────────────
   programs.ssh = {
     enable = true;
-    addKeysToAgent = "yes";
-    serverAliveInterval = 60;
-    hashKnownHosts = true;
-
-    matchBlocks = {
+    enableDefaultConfig = false;
+    settings = {
       "*" = {
-        # Default identity — place your key at ~/.ssh/id_ed25519
-        identityFile = "~/.ssh/id_ed25519";
+        AddKeysToAgent    = "yes";
+        ServerAliveInterval = 60;
+        HashKnownHosts    = true;
+        IdentityFile      = "~/.ssh/id_ed25519";  # CHANGE if your key is elsewhere
       };
       # Add host-specific blocks below, e.g.:
-      # "github.com" = {
-      #   user = "git";
-      #   identityFile = "~/.ssh/github_ed25519";
-      # };
+      # "github.com" = { User = "git"; IdentityFile = "~/.ssh/github_ed25519"; };
     };
   };
 
@@ -61,7 +56,7 @@
   programs.gpg = {
     enable = true;
     settings = {
-      default-key = "";        # set to your key fingerprint after import
+      default-key     = "";          # CHANGE: set your key fingerprint after import
       auto-key-retrieve = true;
       no-symkey-cache = true;
     };
@@ -70,20 +65,18 @@
   services.gpg-agent = {
     enable = true;
     enableSshSupport = true;
-    pinentryPackage = pkgs.pinentry-gnome3;
-    defaultCacheTtl = 3600;
-    maxCacheTtl = 86400;
+    pinentry.package = pkgs.pinentry-gnome3;
+    defaultCacheTtl  = 3600;
+    maxCacheTtl      = 86400;
   };
 
   # ── Extra dev tools ───────────────────────────────────────────────────────────
   home.packages = with pkgs; [
-    delta          # git diff pager
     gh             # GitHub CLI
     jq             # JSON processor
     ripgrep        # fast grep (rg)
     fd             # fast find
     bat            # cat with syntax highlighting
-    eza            # modern ls replacement
     htop           # process monitor
     ncdu           # disk usage analyzer
     unzip zip      # archive tools
@@ -93,7 +86,7 @@
   programs.eza = {
     enable = true;
     enableFishIntegration = true;
-    git = true;
+    git   = true;
     icons = "auto";
   };
 }

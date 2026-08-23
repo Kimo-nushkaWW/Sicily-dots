@@ -15,9 +15,26 @@
       url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    zen-browser = {
+      url = "github:0xc000022070/zen-browser-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    tg-ws-proxy.url = "github:pialtor/tg-ws-proxy-flake";
   };
 
-  outputs = { self, nixpkgs, home-manager, quickshell, ... }: let
+  outputs = { self, nixpkgs, home-manager, quickshell, antigravity-nix, spicetify-nix, zen-browser, tg-ws-proxy,... }: let
     system = "x86_64-linux";
 
     pkgs = import nixpkgs {
@@ -40,7 +57,12 @@
           };
         }
       ];
-      specialArgs = { inherit pkgs; };
+      # Pass both pkgs (with overlays) and all flake inputs so configuration.nix
+      # can reference tg-ws-proxy.packages, zen-browser, antigravity-nix, etc.
+      specialArgs = {
+        inherit pkgs;
+        inputs = { inherit antigravity-nix spicetify-nix zen-browser tg-ws-proxy; };
+      };
     };
   };
 }

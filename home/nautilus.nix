@@ -40,7 +40,7 @@
   # Point QT apps to use the GTK theme so the whole desktop looks consistent
   qt = {
     enable = true;
-    platformTheme.name = "gtk";
+    platformTheme.name = "gtk3";
     style.name = "adwaita-dark";
   };
 }
