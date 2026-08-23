@@ -30,6 +30,11 @@
     };
   };
 
+  programs.throne = {
+    enable = true;
+    tunMode.enable = true;
+  };
+
   # ── Locale / Time ────────────────────────────────────────────────────────────
   time.timeZone = "Asia/Yekaterinburg";
   i18n.defaultLocale = "ru_RU.UTF-8";
@@ -84,6 +89,14 @@
   services.blueman.enable = true;
 
   # ── System packages (minimal — user packages live in home-manager) ────────────
+  programs.gamemode.enable = true;
+  programs.steam = {
+    enable = true;
+    protontricks.enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
+  };
+
   environment.systemPackages = with pkgs; [
     git wget curl vim
 

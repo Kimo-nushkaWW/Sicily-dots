@@ -96,14 +96,4 @@
       Install.WantedBy = [ "timers.target" ];
     };
   };
-
-  # ── Default wallpaper (placeholder — symlink at activation) ──────────────────
-  # Place your actual wallpaper at Sicily-dots/wallpapers/default.jpg
-  home.activation.linkDefaultWallpaper = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    mkdir -p $HOME/wallpapers
-    if [ ! -f $HOME/wallpapers/default.jpg ]; then
-      # Copy placeholder from dots repo; replace with your own image
-      run cp ${../wallpapers/default.jpg} $HOME/wallpapers/default.jpg 2>/dev/null || true
-    fi
-  '';
 }

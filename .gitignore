@@ -12,7 +12,6 @@ home/.cache/
 wallpapers/*.jpg
 wallpapers/*.png
 wallpapers/*.webp
-!wallpapers/default.jpg
 
 # k4's own git history (we keep k4 as a plain directory, not a submodule)
 k4/.git/

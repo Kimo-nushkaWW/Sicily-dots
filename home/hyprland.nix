@@ -15,8 +15,8 @@
       # Format: name, resolution@refresh, position, scale
       # Adjust these for your actual monitors.
       monitor = [
-        "DP-1,preferred,0x0,1"
-        "DP-2,preferred,2560x0,1"
+        "DP-2,1920x1080@239,0x0,1"
+        "DVI-D-1,1920x1080@60,1920x0,1"
       ];
 
       # ── General ────────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@
 
       # ── Input ──────────────────────────────────────────────────────────────
       input = {
-        kb_layout = "us,ru";         # Alt+Shift toggles between English and Russian
+        kb_layout = "us,ru";
         kb_options = "grp:alt_shift_toggle";
         follow_mouse = 1;
         touchpad.natural_scroll = true;
