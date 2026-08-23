@@ -16,3 +16,6 @@ wallpapers/*.webp
 
 # k4's own git history (we keep k4 as a plain directory, not a submodule)
 k4/.git/
+
+# graphify knowledge graph output (generated, not source)
+graphify-out/
