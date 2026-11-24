@@ -51,6 +51,11 @@ Scope {
         return best
     }
 
+    // На нескольких мониторах выход с одной island может прийти уже после
+    // входа на другую. Один глобальный bool тогда ложно сбрасывал hover и
+    // переключал вид island посреди наведения.
+    property int hoveredPanels: 0
+
     //  ── lo que se va solo se aparta ───────────────────────────────
     //
     //  Una vista transitoria —un aviso, la confirmación de una captura— aparece
@@ -329,30 +334,12 @@ Scope {
             // bajo la píldora, y todo lo que crece por encima flota
             exclusiveZone: Theme.baseHeight
 
-            // Redimensionar una layer surface cuesta un ciclo configure/ack, así
-            // que hacerlo por frame es lo que hacía parpadear el panel. La
-            // superficie crece una vez al empezar y encoge una vez al acabar;
-            // entre medias solo se anima la island dentro de ella.
-            //  El +44 durante un gesto: el empujón baja la island entera y sin
-            //  ese margen los píxeles desplazados se recortan contra el borde
-            //  de la superficie. Crece al empezar el gesto y el encogido lo
-            //  recoge el mismo temporizador de siempre.
-            readonly property int targetHeight: Math.min(Theme.maxIslandHeight,
-                panelWindow.altoIsla + 2 + (island.gestoEnCurso ? 44 : 0))
-            property int surfaceHeight: targetHeight
-
-            onTargetHeightChanged: {
-                if (targetHeight > surfaceHeight)
-                    surfaceHeight = targetHeight
-                else
-                    surfaceShrinkTimer.restart()
-            }
-
-            Timer {
-                id: surfaceShrinkTimer
-                interval: 520
-                onTriggered: panelWindow.surfaceHeight = panelWindow.targetHeight
-            }
+            // Redimensionar layer surface durante hover obliga a Wayland a
+            // hacer configure/ack. Aunque el contenido ya no tenga overshoot,
+            // ese cambio de superficie puede verse como un salto hacia arriba.
+            // Dejamos una superficie estable: solo se anima la island dentro.
+            // 46 = margen de 2 px + el desplazamiento máximo de un gesto.
+            readonly property int surfaceHeight: Theme.maxIslandHeight + 46
 
             implicitHeight: surfaceHeight
             //  Sin la island, la ventana no acepta ni un clic.
@@ -389,8 +376,7 @@ Scope {
                 Behavior on fraccionSuave {
                     NumberAnimation {
                         duration: 440
-                        easing.type: Easing.OutBack
-                        easing.overshoot: 0.42
+                        easing.type: Easing.OutCubic
                     }
                 }
 
@@ -449,16 +435,16 @@ Scope {
                 Behavior on width {
                     NumberAnimation {
                         duration: 440
-                        easing.type: Easing.OutBack
-                        easing.overshoot: 0.42
+                        easing.type: Easing.OutCubic
                     }
                 }
 
                 Behavior on height {
                     NumberAnimation {
                         duration: 400
-                        easing.type: Easing.OutBack
-                        easing.overshoot: 0.32
+                        // Не перелетать целевую высоту при наведении: при
+                        // нижней панели это выглядит как скачок вверх.
+                        easing.type: Easing.OutCubic
                     }
                 }
 
@@ -543,6 +529,7 @@ Scope {
                 HoverHandler {
                     onHoveredChanged: {
                         if (hovered) {
+                            root.hoveredPanels += 1
                             hoverExitTimer.stop()
                             root.holdHoverExit()
                             if (!root.activePlugin || root.activePlugin.name === "idle")
@@ -553,6 +540,7 @@ Scope {
                             Island.hovered = true
                             Notifs.holdToast()
                         } else {
+                            root.hoveredPanels = Math.max(0, root.hoveredPanels - 1)
                             hoverExitTimer.restart()
                             root.armHoverExit()
                             Notifs.resumeToast()
@@ -657,6 +645,7 @@ Scope {
                     // clics, lo que no coja nadie cae aquí.
                     MouseArea {
                         anchors.fill: parent
+                        z: -1
                         acceptedButtons: Qt.LeftButton
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.backgroundTap(panelWindow.screen.name,
@@ -670,6 +659,7 @@ Scope {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: panelWindow.anchoIsla
                         height: panelWindow.altoIsla
+                        z: 1
 
                         Repeater {
                             //  Las instancias vivas del gestor. Cuando esto
@@ -702,13 +692,18 @@ Scope {
     Timer {
         id: hoverExitTimer
         interval: 240
-        onTriggered: Island.hovered = false
+        onTriggered: {
+            if (root.hoveredPanels === 0)
+                Island.hovered = false
+        }
     }
 
     // ── salida del ratón ──────────────────────────────────────────
     // Los módulos que se abren con el ratón se van al sacarlo, pero cada uno
     // decide qué hacer: aquí solo se cuenta el tiempo y se avisa al activo.
     function armHoverExit() {
+        if (hoveredPanels > 0)
+            return
         const p = activePlugin
         if (!p || !p.closeOnHoverExit)
             return
@@ -723,6 +718,8 @@ Scope {
         id: pluginHoverExitTimer
         interval: 700
         onTriggered: {
+            if (root.hoveredPanels > 0)
+                return
             const p = root.activePlugin
             if (p && p.closeOnHoverExit)
                 p.hoverTimedOut()

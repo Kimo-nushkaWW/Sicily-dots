@@ -34,11 +34,35 @@ Singleton {
         // se copia antes: descartar muta la lista mientras se recorre
         const list = server.trackedNotifications.values.slice()
         for (let i = 0; i < list.length; ++i)
-            list[i].dismiss()
+            dismissNotification(list[i])
 
         count = 0
+        latest = null
         toastOpen = false
         toastTimer.stop()
+    }
+
+    // `dismiss()` closes the D-Bus notification, but the list shown by K4 is
+    // controlled by `tracked`. Keep the model in sync or the row remains in
+    // both `tracked` and `recent` until a full clear.
+    function dismissNotification(n) {
+        if (!n)
+            return false
+        const wasTracked = n.tracked
+        n.dismiss()
+        n.tracked = false
+        return wasTracked
+    }
+
+    function dismissOne(n) {
+        if (!n)
+            return
+        if (latest === n) {
+            dismissToast()
+            latest = null
+        }
+        if (dismissNotification(n))
+            count = Math.max(0, count - 1)
     }
 
     function dismissToast() {
@@ -121,7 +145,7 @@ Singleton {
             // el protocolo dice que la notificación se cierra al invocar una
             // acción, salvo que se declare residente
             if (!n.resident)
-                n.dismiss()
+                dismissNotification(n)
             return
         }
 
@@ -134,7 +158,7 @@ Singleton {
 
         action.invoke()
         if (n && !n.resident)
-            n.dismiss()
+            dismissNotification(n)
     }
 
     // ── enfocar la ventana de la aplicación ───────────────────────
@@ -348,14 +372,14 @@ Singleton {
             // direction, monitor, window, urgent_or_last y last.
             Hyprland.dispatch('hl.dsp.focus({ window = "address:' + found.address + '" })')
             if (n && !n.resident)
-                n.dismiss()
+                dismissNotification(n)
             return
         }
 
         // No está abierta: si la notificación dice de qué aplicación viene, se
         // abre. Y si tampoco eso, se deja la notificación en su sitio.
         if (n && launchEntry(n))
-            n.dismiss()
+            dismissNotification(n)
     }
 
     function launchEntry(n) {
@@ -413,7 +437,7 @@ Singleton {
                 continue
             if (latest === list[i])
                 dismissToast()
-            list[i].dismiss()
+            dismissNotification(list[i])
             ++idas
         }
 
@@ -446,7 +470,7 @@ Singleton {
                 continue
             if (latest === n)
                 dismissToast()
-            n.dismiss()
+            dismissNotification(n)
             ++idas
         }
         if (idas > 0)

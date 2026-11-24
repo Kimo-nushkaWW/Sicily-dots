@@ -8,7 +8,7 @@ home/.cache/
 # matugen runtime output (generated at runtime)
 # (intentionally not ignored — you may want to commit color templates)
 
-# swappy screenshots (personal)
+# Personal screenshots
 wallpapers/*.jpg
 wallpapers/*.png
 wallpapers/*.webp

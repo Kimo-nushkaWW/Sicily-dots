@@ -34,6 +34,12 @@
     # Screen capture (k4's capture module)
     grim                # screenshot compositor
     slurp               # region selector
+    wf-recorder         # Wayland screen recorder
+    ffmpeg              # microphone/camera and track handling
+    pulseaudio          # provides pactl for PipeWire/PulseAudio discovery
+    satty               # screenshot annotation
+    zenity               # file chooser dialogs used by the editor
+    xdg-utils            # xdg-open for captured files and folders
 
     # Bluetooth
     bluez               # bluetoothctl
@@ -44,6 +50,9 @@
     imagemagick         # thumbnail generation
     socat               # Hyprland IPC socket communication
     libnotify           # notify-send
+    curl                # Gemini API adapter
+    jq                  # Gemini API JSON assembly/parsing
+    util-linux           # uuidgen for Gemini conversation ids
 
     # Whisper transcription (optional, for video editor subtitles)
     # whisper-cpp       # uncomment if you want this feature
@@ -57,19 +66,35 @@
     recursive = true;   # symlink each file individually → edits in-place work
   };
 
-  # ── Autostart + Hyprland rules ───────────────────────────────────────────────
-  # arrancar sets QML_IMPORT_PATH so plugins can `import K4`. Calling quickshell
-  # directly skips this and every plugin fails silently at runtime.
-  #
-  # k4.conf (from k4/hypr/k4.conf) ships with @RAIZ@ placeholders. We substitute
-  # them here at eval time and write the result into conf.d/ so Hyprland sources
-  # it automatically. The exec-once line from k4.conf is EXCLUDED — we write our
-  # own below so we don't duplicate the process on Hyprland reload.
+  # gemini.sh is kept explicit so it is included even when the flake source
+  # is evaluated from a dirty Git worktree before the file is committed.
+  home.file.".config/quickshell/k4/gemini.sh" = {
+    text = builtins.readFile ../k4/gemini.sh;
+    executable = true;
+  };
+
+  # New built-in plugins must be listed explicitly while the worktree is
+  # dirty: a flake Git source contains tracked files, but not a new
+  # uncommitted directory under the recursive k4 link.
+  home.file.".config/quickshell/k4/plugins/Notas/NotasPlugin.qml".text =
+    builtins.readFile ../k4/plugins/Notas/NotasPlugin.qml;
+  home.file.".config/quickshell/k4/plugins/Notas/NotasView.qml".text =
+    builtins.readFile ../k4/plugins/Notas/NotasView.qml;
+  home.file.".config/quickshell/k4/plugins/Notas/qmldir".text =
+    builtins.readFile ../k4/plugins/Notas/qmldir;
+  home.file.".config/quickshell/k4/plugins/Notas/notas.py" = {
+    text = builtins.readFile ../k4/plugins/Notas/notas.py;
+    executable = true;
+  };
+
+  # Keep the old fragment available during the transition from an already
+  # running .conf session. The new Lua config does not source it, so it cannot
+  # trigger Hyprland's deprecation warning; it only prevents a live old
+  # session from losing its K4 binds when Home Manager updates the symlink.
   home.file.".config/hypr/conf.d/k4.conf".text =
     let
       k4dir = "$HOME/.config/quickshell/k4";
       k4conf = builtins.readFile ../k4/hypr/k4.conf;
-      # Strip the exec-once line from k4.conf — we write our own.
       withoutExecOnce = builtins.replaceStrings
         [ "exec-once = @RAIZ@/arrancar --no-duplicate -d\n" ]
         [ "" ]
@@ -77,15 +102,24 @@
     in
     builtins.replaceStrings [ "@RAIZ@" ] [ k4dir ] withoutExecOnce
     + ''
-
-      # ── Startup (managed by Nix, not k4's installer) ──────────────────────────
-      # arrancar sets QML_IMPORT_PATH for the K4 module. --no-duplicate prevents
-      # a second instance on Hyprland config reload.
+      # Compatibility startup for a session that still has the legacy config
+      # loaded. New Lua sessions start K4 from config/k4.lua instead.
       exec-once = $HOME/.config/quickshell/k4/arrancar --no-duplicate -d
 
-      # ── Layer rules ───────────────────────────────────────────────────────────
-      layerrule = blur, k4*
-      layerrule = ignorealpha 0.5, k4*
-      layerrule = xray 0, k4*
+      layerrule = match:namespace ^k4.*$, blur true
+      layerrule = match:namespace ^k4.*$, ignore_alpha 0.5
+      layerrule = match:namespace ^k4.*$, xray true
     '';
+
+  # ── Hyprland Lua integration ────────────────────────────────────────────────
+  # Hyprland 0.56+ loads Lua as the primary configuration format. The k4
+  # template already uses the native Lua API, so autoload it as a module
+  # instead of sourcing the deprecated k4.conf fragment.
+  wayland.windowManager.hyprland.extraLuaFiles."config.k4" = {
+    content = builtins.replaceStrings
+      [ "@RAIZ@" ]
+      [ "$HOME/.config/quickshell/k4" ]
+      (builtins.readFile ../k4/hypr/k4.lua);
+    autoLoad = true;
+  };
 }

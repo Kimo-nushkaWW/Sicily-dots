@@ -63,9 +63,11 @@ user_content=$(jq -cn \
      end')
 
 contents=$(jq -cn --argjson history "$history" --argjson user "$user_content" '$history + [$user]')
-payload=$(jq -cn --argjson contents "$contents" '{contents:$contents,generationConfig:{temperature:0.7}}')
+payload=$(jq -cn --argjson contents "$contents" \
+    '{systemInstruction:{parts:[{text:"Отвечай на русском языке, если пользователь явно не попросил другой язык."}]},contents:$contents,generationConfig:{temperature:0.7}}')
 
-model=${GEMINI_MODEL:-gemini-2.5-flash}
+# Keep the override for compatibility, but use a currently supported default.
+model=${GEMINI_MODEL:-gemini-3.6-flash}
 config_file=$(mktemp "$workdir/curl.XXXXXX")
 trap 'rm -f "$config_file"' EXIT
 chmod 600 "$config_file"

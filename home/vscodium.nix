@@ -4,7 +4,7 @@
   # Use programs.vscodium so config is written to VSCodium's own paths
   # (~/.config/VSCodium, not ~/.config/Code)
   programs.vscodium = {
-    enable = true;
+    enable = false;
 
     profiles.default = {
       userSettings = {

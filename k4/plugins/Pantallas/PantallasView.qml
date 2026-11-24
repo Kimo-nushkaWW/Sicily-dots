@@ -426,7 +426,7 @@ K4.Aparicion {
                         K4.Etiqueta {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: screen.modelData.name + " · "
-                                + Number(screen.modelData.refreshRate).toFixed(0) + " Hz"
+                                + Number(screen.modelData.refreshRate).toFixed(0) + Idioma.t(" Hz")
                             color: K4.Tema.apagado
                             font.pixelSize: 8
                         }

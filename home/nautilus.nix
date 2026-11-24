@@ -1,6 +1,15 @@
-{ pkgs, config, ... }:
+{ pkgs, ... }:
 
 {
+  home.pointerCursor = {
+    enable = true;
+    package = pkgs.bibata-cursors;
+    name = "Bibata-Modern-Ice";
+    size = 24;
+    gtk.enable = true;
+    x11.enable = true;
+  };
+
   home.packages = with pkgs; [
     nautilus                  # file manager
     glib                      # provides gio (needed by nautilus for MTP, trash)
@@ -18,16 +27,21 @@
     };
   };
 
-  # ── GTK theme (updated by matugen on wallpaper change) ───────────────────────
+  # ── GTK defaults ─────────────────────────────────────────────────────────────
+  # Do not import K4's wallpaper palette here.  GTK applications use the
+  # normal Adwaita light/dark preference, while K4 keeps its own dynamic UI.
   gtk = {
     enable = true;
+    # Current PC mode is light; this is deliberately independent of wallpaper
+    # colours.  The wallpaper palette is still used by K4 and Foot only.
+    colorScheme = "light";
     iconTheme = {
       package = pkgs.papirus-icon-theme;
-      name = "Papirus-Dark";
+      name = "Papirus";
     };
     cursorTheme = {
       package = pkgs.bibata-cursors;
-      name = "Bibata-Modern-Classic";
+      name = "Bibata-Modern-Ice";
       size = 24;
     };
     font = {
@@ -37,10 +51,10 @@
     };
   };
 
-  # Point QT apps to use the GTK theme so the whole desktop looks consistent
+  # Let Qt follow the GTK system light/dark setting.  Do not force a colour
+  # style: the wallpaper palette belongs to K4 only.
   qt = {
     enable = true;
     platformTheme.name = "gtk3";
-    style.name = "adwaita-dark";
   };
 }

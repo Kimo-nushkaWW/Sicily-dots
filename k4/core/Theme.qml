@@ -5,6 +5,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 Singleton {
     id: tema
@@ -21,24 +22,73 @@ Singleton {
     //  tinta, los apagados y los colores con significado (verde, rojo, azul,
     //  amarillo) no se tiñen: el texto tiene que leerse y un rojo de alerta
     //  tiene que seguir siendo rojo bajo cualquier ambiente.
-    readonly property color _islandBgBase: "#000000"
-    readonly property color _surfaceBase: "#1c1c1e"
-    readonly property color _surfaceHiBase: "#2c2c2e"
-    readonly property color _trackBase: "#3a3a3c"
+    property color paletteBackground: "#000000"
+    property color paletteForeground: "#ffffff"
+    property color wallpaperAccent: "#0a84ff"
+
+    readonly property color _islandBgBase: paletteBackground
+    readonly property color _surfaceBase: Qt.tint(paletteBackground,
+        Qt.rgba(wallpaperAccent.r, wallpaperAccent.g, wallpaperAccent.b, 0.22))
+    readonly property color _surfaceHiBase: Qt.tint(paletteBackground,
+        Qt.rgba(wallpaperAccent.r, wallpaperAccent.g, wallpaperAccent.b, 0.36))
+    readonly property color _trackBase: Qt.tint(paletteBackground,
+        Qt.rgba(paletteForeground.r, paletteForeground.g, paletteForeground.b, 0.24))
 
     readonly property color islandBg: _tinta(_islandBgBase)
-    readonly property color ink: "#ffffff"
-    readonly property color muted: "#8e8e93"
-    readonly property color dim: "#48484a"
+    readonly property color ink: paletteForeground
+    readonly property color muted: Qt.rgba(paletteForeground.r, paletteForeground.g,
+        paletteForeground.b, 0.62)
+    readonly property color dim: Qt.rgba(paletteForeground.r, paletteForeground.g,
+        paletteForeground.b, 0.32)
     readonly property color surface: _tinta(_surfaceBase)
     readonly property color surfaceHi: _tinta(_surfaceHiBase)
     readonly property color track: _tinta(_trackBase)
     readonly property color green: "#30d158"
     readonly property color red: "#ff453a"
-    readonly property color blue: "#0a84ff"
+    readonly property color blue: wallpaperAccent
     // Para el audio añadido. Es el amarillo del sistema en su versión oscura,
     // de la misma familia que el verde y el rojo de arriba.
     readonly property color yellow: "#ffd60a"
+
+    readonly property string paletaWal: Quickshell.env("HOME")
+        + "/.cache/wal/colors.json"
+
+    function colorValido(valor) {
+        return typeof valor === "string"
+            && /^#[0-9a-fA-F]{6}$/.test(valor)
+    }
+
+    function cargarPaleta(bruto) {
+        let d
+        try {
+            d = JSON.parse(bruto)
+        } catch (e) {
+            return
+        }
+
+        const special = d.special || ({})
+        const colors = d.colors || ({})
+        if (colorValido(special.background))
+            paletteBackground = special.background
+        if (colorValido(special.foreground))
+            paletteForeground = special.foreground
+        if (colorValido(colors.color4))
+            wallpaperAccent = colors.color4
+    }
+
+    // colors.json is replaced atomically by k4-palette.  Explicit reload is
+    // needed because a watcher can otherwise remain attached to the old inode.
+    function recargarPaleta() {
+        paleta.reload()
+    }
+
+    FileView {
+        id: paleta
+        path: tema.paletaWal
+        watchChanges: true
+        onLoaded: tema.cargarPaleta(text())
+        onFileChanged: reload()
+    }
 
     // ── tinte ─────────────────────────────────────────────────────
     //

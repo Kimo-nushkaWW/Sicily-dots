@@ -36,7 +36,7 @@ CARPETAS = ["widgets", "services", "plugins"]
 #  plantilla, así que no había forma de traducirlas ni de echarlas de menos: no
 #  salían como pendientes, salían como si no existieran.
 PROPIEDADES = ("text", "texto", "nombre", "desc", "papel", "titulo", "grupo",
-               "title")
+               "title", "label", "description", "placeholderText", "toolTip")
 
 # Propiedades que llevan identificadores y no se traducen nunca, aunque caigan
 # dentro del bloque de un texto. Traducir un `id` rompe el programa en cuanto

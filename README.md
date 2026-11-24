@@ -14,10 +14,10 @@ NixOS + Hyprland + k4 Dynamic Island dotfiles.
 | Editor | VSCodium |
 | Files | Nautilus |
 | Theming | matugen + pywal (wallpaper-driven) |
-| Wallpaper | swww |
+| Wallpaper | awww |
 | Fonts | JetBrainsMono Nerd Font, Noto CJK |
-| Lock screen | hyprlock + hypridle |
-| Screenshots | grim + slurp + swappy |
+| Lock screen | hyprlock (manual) |
+| Screenshots | K4 capture with frozen-frame selector |
 | Audio | PipeWire + WirePlumber |
 
 ## Structure
@@ -32,18 +32,16 @@ Sicily-dots/
 │   ├── default.nix             # home-manager entrypoint
 │   ├── hyprland.nix            # Hyprland config, keybinds, animations
 │   ├── k4.nix                  # k4 island: symlink + deps + autostart
-│   ├── theme.nix               # matugen + pywal + swww + auto light/dark
+│   ├── theme.nix               # matugen + pywal + awww + auto light/dark
 │   ├── foot.nix                # foot terminal
 │   ├── fish.nix                # fish + starship
 │   ├── vscodium.nix            # VSCodium
 │   ├── nautilus.nix            # file manager + GTK/QT theme
-│   ├── hyprlock.nix            # lock screen + idle
-│   ├── screenshots.nix         # grim + slurp + swappy
+│   ├── hyprlock.nix            # manual lock screen
 │   ├── fonts.nix               # Nerd Fonts, CJK
 │   └── dev.nix                 # git, ssh, gpg, dev tools
 ├── k4/                         # k4 source (your fork — edit freely)
-└── wallpapers/
-    └── default.jpg             # starting wallpaper
+└── wallpapers/                 # optional user wallpapers
 ```
 
 ## Installation
@@ -71,6 +69,18 @@ sudo nixos-rebuild switch --flake ~/Sicily-dots#sicily
 ```
 
 Home-manager runs automatically as a NixOS module.
+
+For a standalone Home Manager switch, use the exported configuration and keep
+the backup flag when taking ownership of existing files:
+
+```bash
+nix run --no-update-lock-file ~/Sicily-dots#home-manager -- switch \
+  --flake ~/Sicily-dots#kimo@sicily -b hm-backup
+```
+
+В Fish доступны сокращения `nrs` (NixOS) и `hrs` (Home Manager). После
+успешного переключения они автоматически выполняют `hyprctl reload`, поэтому
+изменения в `home/hyprland.nix` применяются без перезагрузки компьютера.
 
 ### 4. Clone k4 source (if not already present)
 
@@ -101,15 +111,18 @@ Colors switch automatically:
 |---|---|
 | `SUPER+T` | foot terminal |
 | `SUPER+E` | Nautilus |
-| `SUPER+L` | hyprlock |
-| `SUPER+SHIFT+S` | region screenshot → swappy |
-| `SUPER+Print` | full screenshot → swappy |
+| `SUPER+L` | K4 lock screen |
+| `SUPER+C` | region screenshot via K4 (frozen frame) |
+| `Print` | region screenshot via K4 |
+| `Shift+Print` | full screenshot via K4 |
+| `Ctrl+Print` | active window screenshot via K4 |
 | `SUPER+Q` | close window |
-| `SUPER+F` | toggle float |
-| `SUPER+SPACE` | fullscreen |
+| `SUPER+F` | полноэкранный режим |
+| `SUPER+D` | специальный рабочий стол Telegram/Discord |
+| `SUPER+SPACE` | K4 application launcher |
 | `SUPER+1-9` | switch workspace |
 | `SUPER+SHIFT+1-9` | move window to workspace |
-| `SUPER+H/J/K/L` | focus direction |
+| `SUPER+H/J` | focus left/down |
 | `SUPER+SHIFT+H/J/K/L` | move window |
 
 ## k4 customization
@@ -125,5 +138,6 @@ qs ipc call k4 reload
 Or kill and restart:
 
 ```bash
-pkill quickshell && quickshell -p ~/.config/quickshell/k4
+quickshell kill --id "$(quickshell list --json | jq -r '.[0].id')" --any-display 2>/dev/null || true
+~/.config/quickshell/k4/arrancar --no-duplicate -d
 ```

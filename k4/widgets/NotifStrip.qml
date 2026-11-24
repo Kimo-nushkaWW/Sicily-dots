@@ -119,6 +119,7 @@ ColumnLayout {
                 anchors.leftMargin: 9
                 anchors.rightMargin: 4
                 spacing: 8
+                z: 1
 
                 Image {
                     source: row.icon
@@ -183,7 +184,7 @@ ColumnLayout {
                     glyph: Theme.ico.close
                     glyphSize: 12
                     glyphColor: rowMouse.containsMouse ? Theme.ink : Theme.dim
-                    onActivated: row.modelData.dismiss()
+                    onActivated: Notifs.dismissOne(row.modelData)
                     Layout.alignment: Qt.AlignVCenter
                 }
             }
@@ -191,6 +192,7 @@ ColumnLayout {
             MouseArea {
                 id: rowMouse
                 anchors.fill: parent
+                z: 0
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 // el botón de cerrar va por encima y se queda su propio clic

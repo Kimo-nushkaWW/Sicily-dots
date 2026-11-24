@@ -17,6 +17,8 @@ traductor, así que el texto que lee el usuario lo pone el QML con Idioma.t().
 import argparse, json, os, shutil, subprocess, sys, time
 
 TRABAJO = "/tmp/k4-captura"
+CARPETA_FOTOS = "/home/kimo/Pictures/Screenshots"
+CARPETA_VIDEOS = "/home/kimo/Videos/Recordings"
 
 
 def salir(**datos):
@@ -25,15 +27,8 @@ def salir(**datos):
 
 
 def carpeta(que):
-    """Dónde van fotos y vídeos, según lo que diga el escritorio."""
-    clave = "PICTURES" if que == "fotos" else "VIDEOS"
-    base = ""
-    if shutil.which("xdg-user-dir"):
-        base = subprocess.run(["xdg-user-dir", clave],
-                              capture_output=True, text=True).stdout.strip()
-    if not base or not os.path.isdir(base):
-        base = os.path.expanduser("~")
-    destino = os.path.join(base, "Capturas")
+    """Return the single, user-visible destination for this media type."""
+    destino = CARPETA_FOTOS if que == "fotos" else CARPETA_VIDEOS
     os.makedirs(destino, exist_ok=True)
     return destino
 
@@ -158,8 +153,17 @@ def hacer_foto(args):
     #  Se abre desde el botón de la tarjeta, cuando se pide. Un programa que
     #  aparece sin que nadie lo llame es un susto, no un atajo.
     guardada = args.destino in ("fichero", "ambos", "anotar")
+    copia = ruta
     if not guardada:
-        # Solo al portapapeles: el fichero era un medio, no un fin.
+        # Solo al portapapeles: elimina el fichero visible, pero conserva una
+        # copia temporal hasta la siguiente captura para que «Копировать» en
+        # la tarjeta de resultado siga funcionando.
+        copia = os.path.join(TRABAJO, "ultima-captura.png")
+        try:
+            os.makedirs(TRABAJO, exist_ok=True)
+            shutil.copyfile(ruta, copia)
+        except OSError:
+            copia = ""
         try:
             os.remove(ruta)
         except OSError:
@@ -167,7 +171,7 @@ def hacer_foto(args):
         ruta = ""
 
     salir(ok=True, ruta=ruta, w=ancho, h=alto,
-          copiada=copiada, guardada=guardada)
+          copiada=copiada, guardada=guardada, copia=copia)
 
 
 def medir(ruta):

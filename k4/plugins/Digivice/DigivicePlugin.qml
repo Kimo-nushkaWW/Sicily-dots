@@ -14,7 +14,7 @@ K4Plugin {
     id: self
 
     name: "digivice"
-    title: "Digivice"
+    title: Idioma.t("Digivice")
     priority: 63
     active: habilitado && abierto
 

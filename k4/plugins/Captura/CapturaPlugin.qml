@@ -65,15 +65,16 @@ K4Plugin {
         { clave: "ambos",        texto: Idioma.t("Las dos"), icono: 0xF05E0 }
     ]
 
-    // 500 y no 440: con cuatro botones debajo del nombre del fichero, a 440 se
-    // salía «Copiar» por el borde derecho.
+    // 620 y no 560: en ruso el tercer selector y el pie de acciones necesitan
+    // margen real; con la anchura anterior se recortaba «Окно» en algunas
+    // fuentes y el cierre quedaba pegado al borde.
     // La cuenta atrás se queda la island entera y sin nada más: es un número
     // gigante, y para eso no hace falta anchura.
     //  1000 y no 940 desde que el pie lleva cuatro botones de añadir: con 940 el
     //  de renderizar se salía por la derecha.
     islandWidth: modo === "cuenta" ? 200
         : (modo === "editor" ? 1000 : (modo === "abrir" ? 640
-        : (modo === "video" ? 620 : (modo === "hecha" ? 500 : 520))))
+        : (modo === "video" ? 620 : (modo === "hecha" ? 620 : 620))))
     //  El editor crece con las capas.
     //
     //  Cada banda añade una fila a la línea de tiempo. Antes el alto topaba en
@@ -93,7 +94,7 @@ K4Plugin {
            ? Math.min(Theme.maxIslandHeight,
                       610 + Math.max(0, Editor.cuantasBandas - 1) * 29)
         : (modo === "abrir" ? 440 : (modo === "video" ? 164
-        : (modo === "hecha" ? 132 : 208))))
+         : (modo === "hecha" ? 160 : 260))))
 
     view: Component {
         Loader {
@@ -514,13 +515,13 @@ K4Plugin {
     //  deducir los momentos del propio rastro, por los reposos del cursor.
     K4.Atajo {
         name: "clic"
-        description: "Marca un clic izquierdo en el rastro de la grabación"
+        description: Idioma.t("Marca un clic izquierdo en el rastro de la grabación")
         onPressed: Captura.marcarClic(1)
     }
 
     K4.Atajo {
         name: "clicDerecho"
-        description: "Marca un clic derecho en el rastro de la grabación"
+        description: Idioma.t("Marca un clic derecho en el rastro de la grabación")
         onPressed: Captura.marcarClic(3)
     }
 

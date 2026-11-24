@@ -2,9 +2,9 @@
     "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
     "logo": {
         "type": "chafa",
-        "source": "/home/kimo/Pictures/cat-c.c.jpg",
-        "width": 42,
-        "height": 24,
+        "source": "/home/kimo/Pictures/catc.c.jpg",
+        "width": 38,
+        "height": 22,
         "position": "left",
         "padding": {
             "right": 5
@@ -13,8 +13,11 @@
     "display": {
         "separator": "",
         "color": {
+            // k4-palette remaps the terminal ANSI slots used by these names.
             "keys": "green",
-            "output": "white"
+            // Use the terminal's foreground so this remains readable in both
+            // light and dark modes; k4-palette supplies the accent for keys.
+            "output": "default"
         },
         "key": {
             "width": 0
@@ -22,6 +25,19 @@
         "brightColor": true
     },
     "modules": [
+        // One-line spacers preserve the image rows while centering PC STATUS.
+        {
+            "type": "custom",
+            "format": " "
+        },
+        {
+            "type": "custom",
+            "format": " "
+        },
+        {
+            "type": "custom",
+            "format": " "
+        },
         {
             "type": "custom",
             "format": "{#green}╭─ {#bright_green}PC STATUS{#green} ───────────────────────────────────────────────────────╮"

@@ -72,6 +72,7 @@
 
   # ── Extra dev tools ───────────────────────────────────────────────────────────
   home.packages = with pkgs; [
+    python3      # Python interpreter
     gh             # GitHub CLI
     jq             # JSON processor
     ripgrep        # fast grep (rg)
@@ -79,6 +80,7 @@
     bat            # cat with syntax highlighting
     htop           # process monitor
     ncdu           # disk usage analyzer
+    fastfetch      # compact system summary beside the terminal greeting art
     unzip zip      # archive tools
   ];
 

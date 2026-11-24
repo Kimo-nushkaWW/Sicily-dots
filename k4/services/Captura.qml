@@ -43,6 +43,9 @@ Singleton {
     property string estado: ""
 
     property string ultimaRuta: ""
+    // В режиме «только буфер» видимый файл удаляется, но временная копия
+    // оставляется для повторного нажатия «Копировать» в карточке результата.
+    property string ultimaRutaCopia: ""
     property int ultimaAncho: 0
     property int ultimaAlto: 0
     property bool ultimaCopiada: false
@@ -170,7 +173,12 @@ Singleton {
             // ruta, y reutilizar el mismo nombre devuelve el fotograma de la
             // captura anterior.
             const ruta = "/tmp/k4-captura/congelado-" + captura.serieCongelado + ".ppm"
-            congelador.command = ["grim", "-t", "ppm", ruta]
+            // На чистой загрузке каталог ещё не создан: captura.py создаёт
+            // его позже, уже после выбора области. Подготовить его здесь,
+            // до первого frozen frame.
+            congelador.command = ["sh", "-c",
+                                  "mkdir -p /tmp/k4-captura && exec grim -t ppm \"$1\"",
+                                  "k4-congelar", ruta]
             congelador.pendiente = ruta
             congelador.running = true
         }
@@ -1204,15 +1212,24 @@ Singleton {
     }
 
     function copiar(ruta) {
-        if (!ruta || ruta.length === 0)
+        const fuente = ruta && ruta.length > 0 ? ruta : ultimaRutaCopia
+        if (!fuente || fuente.length === 0)
             return
         Quickshell.execDetached(["sh", "-c",
-            "wl-copy -t image/png < " + entrecomillar(ruta)])
+            "wl-copy -t image/png < \"$1\"", "k4-copiar", fuente])
     }
 
     function abrirCarpeta() {
-        if (carpetaFotos.length > 0)
-            Quickshell.execDetached(["xdg-open", carpetaFotos])
+        // Путь результата не зависит от гонки с отдельным запросом папки.
+        let carpeta = ""
+        if (ultimaRuta.length > 0) {
+            const barra = ultimaRuta.lastIndexOf("/")
+            carpeta = barra > 0 ? ultimaRuta.substring(0, barra) : ""
+        }
+        if (carpeta.length === 0)
+            carpeta = carpetaFotos
+        if (carpeta.length > 0)
+            Quickshell.execDetached(["xdg-open", carpeta])
     }
 
     function abrirCarpetaVideos() {
@@ -1277,6 +1294,7 @@ Singleton {
                 }
 
                 captura.ultimaRuta = d.ruta || ""
+                captura.ultimaRutaCopia = d.copia || captura.ultimaRuta
                 captura.ultimaAncho = d.w || 0
                 captura.ultimaAlto = d.h || 0
                 captura.ultimaCopiada = d.copiada === true

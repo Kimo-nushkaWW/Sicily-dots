@@ -21,7 +21,7 @@ K4.Plugin {
     id: self
 
     name: "apps"
-    title: "Aplicaciones"
+    title: Idioma.t("Aplicaciones")
     priority: 72
     active: abierto
     grabKeyboard: abierto
@@ -35,9 +35,9 @@ K4.Plugin {
     //  actualizaciones pendientes, cada una con su interruptor.
     property bool modoActualizaciones: false
 
-    //  Las de la barra, filtradas por lo que se escribe. Una apagada NO
-    //  desaparece: sale en gris. Que algo se esfume al apagarlo obliga a
-    //  adivinar dónde se fue; en gris se ve que está y por qué no se abre.
+    //  Las de la barra, filtradas por lo que se escribe. Los plugins
+    //  desactivados ya no llegan desde PluginManager.aplicaciones: el menú
+    //  solo contiene cosas que se pueden abrir.
     readonly property var lista: {
         const todas = PluginManager.aplicaciones
         const q = busqueda.trim().toLowerCase()

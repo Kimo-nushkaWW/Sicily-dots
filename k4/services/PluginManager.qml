@@ -47,7 +47,8 @@ Singleton {
         { id: "keys", title: "Atajos", version: "1.0.0", enabled: true },
         { id: "windows", title: "Ventanas", version: "1.0.0", enabled: true },
         { id: "session", title: "Sesión", version: "1.0.0", enabled: true },
-        { id: "captura", title: "Captura", version: "1.0.0", enabled: true }
+        { id: "captura", title: "Captura", version: "1.0.0", enabled: true },
+        { id: "notas", title: "Notas", version: "1.0.0", enabled: true }
     ]
 
     signal cambiado(string id, bool habilitado)
@@ -512,11 +513,12 @@ Singleton {
         .filter(function (m) { return m.configurable !== false })
         .map(function (m) {
             const error = errores[m.id] || ""
-            let desc = "Activar o desactivar este plugin"
+            let desc = Idioma.t("Activar o desactivar este plugin")
             if (m.externo) {
-                desc = m.description || "Plugin de usuario"
+                desc = m.description ? Idioma.t(m.description)
+                                     : Idioma.t("Plugin de usuario")
                 if (m.permisos && m.permisos.length > 0)
-                    desc += "  ·  pide: " + m.permisos.join(", ")
+                    desc += "  ·  " + Idioma.t("pide:") + " " + m.permisos.join(", ")
             }
             const sinRequisito = !requisitoCumplido(m)
             if (m.cargable === false)
@@ -529,7 +531,7 @@ Singleton {
                 desc = error
             return { id: "plugin_" + m.id,
                      pluginId: m.id,
-                     nombre: m.title + (m.externo ? "  ·  " + (m.version || "") : ""),
+                     nombre: Idioma.t(m.title) + (m.externo ? "  ·  " + (m.version || "") : ""),
                      desc: desc,
                      error: (m.cargable === false || sinRequisito) ? "fijo"
                           : (error.length > 0 ? "recargable" : ""),
@@ -546,13 +548,15 @@ Singleton {
     //  Las aplicaciones: lo que sale en el centro de aplicaciones y en los
     //  accesos directos. Se declara en el catálogo o en el manifiesto
     //  (`aplicacion: true`), no en el código, para que se sepa qué es antes
-    //  de cargar nada — y para que un plugin apagado siga saliendo, en gris,
-    //  en vez de desaparecer sin explicación.
+    //  de cargar nada. Un plugin apagado no entra en esta lista; sus ajustes
+    //  viven aparte en `opcionesAjustes` para poder volver a encenderlo.
     readonly property var aplicaciones: catalogo
-        .filter(function (m) { return m.aplicacion === true })
+        .filter(function (m) {
+            return m.aplicacion === true && estaHabilitado(m.id)
+        })
         .map(function (m) {
             return { id: m.id,
-                     nombre: m.title || m.id,
+                     nombre: Idioma.t(m.title || m.id),
                      imagen: m.iconoFichero ? "file://" + m.iconoFichero : "",
                      glifo: m.icono ? parseInt(m.icono, 16) : 0xF0431,
                      externo: m.externo === true,

@@ -1,8 +1,7 @@
-//  Consulta rápida a Codex CLI, autenticado con la cuenta de ChatGPT del
-//  usuario. Nada de automatizar chatgpt.com: esto es el binario oficial.
+//  Consulta rápida a Gemini mediante su API oficial.
 //
 //  Cada apertura empieza conversación nueva, para no heredar el contexto de la
-//  consulta anterior ni el de otras sesiones de Codex que haya por ahí.
+//  consulta anterior ni el de otras sesiones que haya por ahí.
 
 import QtQuick
 import K4 as K4
@@ -32,12 +31,11 @@ K4Plugin {
     property var messages: []         // [{ role: "user"|"assistant"|"error", text }]
     property string lastError: ""
 
-    // id de sesión de Codex de ESTA conversación. Vacío = sesión nueva.
-    // Nunca se resume con --last, que engancharía con otras sesiones.
+    // id de sesión de Gemini de ESTA conversación. Vacío = sesión nueva.
     property string threadId: ""
 
     readonly property string dir: "/tmp/k4-ask"
-    readonly property string script: K4.Paths.enRaiz("ask.sh")
+    readonly property string script: K4.Paths.enRaiz("gemini.sh")
 
     islandWidth: 700
     islandHeight: messages.length > 0 ? 430 : 128
@@ -89,7 +87,7 @@ K4Plugin {
 
     // Imágenes en la respuesta, por dos caminos:
     //
-    //  - Una ruta absoluta suelta: Codex tocó un fichero y lo nombra.
+    //  - Una ruta absoluta suelta: el agente tocó un fichero y lo nombra.
     //  - `attachment://exec-<id>.png`: su herramienta de GENERAR imágenes.
     //    Ese esquema no es ninguna ruta, pero el fichero real está en
     //    ~/.codex/generated_images/<sesión>/ y la sesión es nuestro threadId
@@ -146,7 +144,7 @@ K4Plugin {
     //  Cerrar aparta la conversación, no la tira.
     //
     //  Antes `close()` llamaba a newConversation() y con eso se perdía todo: la
-    //  pregunta, la respuesta y el hilo de Codex. Eso obligaba a dejar la
+    //  pregunta, la respuesta y el hilo de Gemini. Eso obligaba a dejar la
     //  island ocupada hasta terminar de leer, porque cerrarla costaba la
     //  conversación entera.
     function close() {
@@ -190,11 +188,11 @@ K4Plugin {
 
         // el preámbulo solo en el primer turno: después ya vive en la sesión
         let prompt = threadId.length === 0
-            ? "Eres un asistente rápido integrado en la barra del escritorio. "
-                + "Responde en español, breve y directo. Puedes usar markdown sencillo: "
-                + "negrita, cursiva, código y enlaces. Nada de tablas ni encabezados. "
-                + "No ejecutes comandos ni leas archivos salvo que la pregunta lo pida explícitamente.\n\n"
-                + "Pregunta: " + question
+            ? "Ты быстрый ассистент, встроенный в панель рабочего стола. "
+                + "Отвечай по-русски, кратко и по делу. Можно использовать простой markdown: "
+                + "жирный текст, курсив, код и ссылки. Не используй таблицы и заголовки. "
+                + "Не выполняй команды и не читай файлы, если пользователь явно об этом не попросил.\n\n"
+                + "Вопрос: " + question
             : question
 
         if (selection.length > 0)
@@ -203,8 +201,7 @@ K4Plugin {
         if (image.length > 0)
             prompt += "\n\nSe adjunta una captura de la pantalla del usuario."
 
-        // vía wrapper: necesita cerrar stdin, si no `codex exec` se cuelga
-        // esperando EOF (Quickshell le deja el pipe abierto)
+        // El adaptador devuelve eventos JSON compatibles con este módulo.
         askProcess.command = [script, prompt, image, threadId]
         askProcess.running = true
         timeoutTimer.restart()
@@ -214,7 +211,7 @@ K4Plugin {
         selection = ""
     }
 
-    //  La herramienta de generar imágenes de Codex no deja rastro fiable en
+    //  La herramienta de generar imágenes anterior no deja rastro fiable en
     //  el texto: a veces `attachment://…`, a veces un mensaje final VACÍO —
     //  la imagen solo existe como fichero en generated_images/<sesión>/. Así
     //  que al acabar el turno se mira ahí directamente, y si hay una nueva se
@@ -274,7 +271,7 @@ K4Plugin {
         } else if (event.type === "turn.failed" || event.type === "error") {
             status = "error"
             updateLastMessage("error",
-                event.error && event.error.message ? event.error.message : "Codex devolvió un error.")
+                event.error && event.error.message ? event.error.message : "Gemini devolvió un error.")
         } else if (event.type === "turn.completed") {
             if (status === "thinking")
                 status = ""
@@ -355,12 +352,13 @@ K4Plugin {
             const last = self.messages.length > 0
                 ? self.messages[self.messages.length - 1] : null
             const answered = last && last.role === "assistant" && last.text.length > 0
+            const reportedError = last && last.role === "error"
 
-            if (!answered) {
+            if (!answered && !reportedError) {
                 self.status = "error"
                 self.updateLastMessage("error", self.lastError.length > 0
                     ? self.lastError
-                    : "Codex terminó con código " + code + " y sin respuesta.")
+                    : "Gemini terminó con código " + code + " y sin respuesta.")
             } else if (self.status === "thinking") {
                 self.status = ""
                 //  Apartada mientras pensaba: avisar de que ya está, que para
@@ -383,7 +381,7 @@ K4Plugin {
             if (askProcess.running) {
                 askProcess.parar(15)
                 self.status = "error"
-                self.updateLastMessage("error", "Codex no respondió en 2 minutos.")
+                self.updateLastMessage("error", "Gemini не ответил за 2 минуты.")
             }
         }
     }

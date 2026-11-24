@@ -8,11 +8,7 @@ FadeIn {
 
     required property var plugin
 
-    // cualquier retoque a mano deja de ser "el preset tal cual"
-    function touched() {
-        view.plugin.dirty = true
-        view.plugin.apply()
-    }
+    function touched() { view.plugin.apply() }
 
     ColumnLayout {
         anchors.fill: parent
@@ -52,10 +48,9 @@ FadeIn {
 
                 Repeater {
                     model: [
-                        { id: "tema",     label: "Tema",     glyph: Theme.ico.palette },
-                        { id: "ventanas", label: "Ventanas", glyph: Theme.ico.window },
-                        { id: "efectos",  label: "Efectos",  glyph: Theme.ico.effects },
-                        { id: "fondo",    label: "Fondo",    glyph: Theme.ico.wallpaper }
+                        { id: "ventanas", label: Idioma.t("Ventanas"), glyph: Theme.ico.window },
+                        { id: "efectos",  label: Idioma.t("Efectos"),  glyph: Theme.ico.effects },
+                        { id: "fondo",    label: Idioma.t("Fondo"),    glyph: Theme.ico.wallpaper }
                     ]
 
                     delegate: Rectangle {
@@ -117,115 +112,6 @@ FadeIn {
             radius: 16
             color: Theme.surface
 
-            // ══ TEMA ═══════════════════════════════════════════════
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 16
-                spacing: 14
-                visible: view.plugin.tab === "tema"
-
-                IslandLabel {
-                    text: Idioma.t("Presets")
-                    color: Theme.muted
-                    font.pixelSize: 11
-                }
-
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 3
-                    columnSpacing: 10
-                    rowSpacing: 10
-
-                    Repeater {
-                        model: view.plugin.presets
-
-                        delegate: Rectangle {
-                            id: presetCard
-                            required property var modelData
-                            readonly property bool current: view.plugin.preset === modelData.id
-                                && !view.plugin.dirty
-
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 56
-                            radius: 12
-                            color: presetMouse.containsMouse ? Theme.surfaceHi : Theme.islandBg
-                            border.width: presetCard.current ? 2 : 0
-                            border.color: Theme.blue
-
-                            Behavior on color { ColorAnimation { duration: 120 } }
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 12
-                                anchors.rightMargin: 12
-                                spacing: 10
-
-                                // muestra del degradado que tendrá el borde activo
-                                Rectangle {
-                                    Layout.preferredWidth: 34
-                                    Layout.preferredHeight: 34
-                                    Layout.alignment: Qt.AlignVCenter
-                                    radius: 8
-
-                                    gradient: Gradient {
-                                        orientation: Gradient.Horizontal
-                                        GradientStop { position: 0; color: presetCard.modelData.from }
-                                        GradientStop { position: 1; color: presetCard.modelData.to }
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    Layout.alignment: Qt.AlignVCenter
-                                    spacing: 1
-
-                                    IslandLabel {
-                                        text: presetCard.modelData.name
-                                        font.pixelSize: 12
-                                        font.weight: Font.DemiBold
-                                    }
-
-                                    IslandLabel {
-                                        text: presetCard.current ? "aplicado" : presetCard.modelData.from
-                                        color: presetCard.current ? Theme.green : Theme.dim
-                                        font.pixelSize: 10
-                                    }
-                                }
-
-                                IconGlyph {
-                                    visible: presetCard.current
-                                    text: Theme.ico.check
-                                    color: Theme.green
-                                    font.pixelSize: 14
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-                            }
-
-                            MouseArea {
-                                id: presetMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: view.plugin.applyPreset(presetCard.modelData.id)
-                            }
-                        }
-                    }
-                }
-
-                Item { Layout.fillHeight: true }
-
-                IslandSlider {
-                    Layout.fillWidth: true
-                    label: "Ángulo del degradado del borde"
-                    suffix: "°"
-                    from: 0
-                    to: 360
-                    step: 5
-                    value: view.plugin.angle
-                    onMoved: function (v) { view.plugin.angle = v; view.touched() }
-                }
-            }
-
             // ══ VENTANAS ═══════════════════════════════════════════
             ColumnLayout {
                 anchors.fill: parent
@@ -235,7 +121,7 @@ FadeIn {
 
                 IslandSlider {
                     Layout.fillWidth: true
-                    label: "Separación interior entre ventanas"
+                    label: Idioma.t("Separación interior entre ventanas")
                     suffix: " px"
                     from: 0; to: 30; step: 1
                     value: view.plugin.gapsIn
@@ -244,7 +130,7 @@ FadeIn {
 
                 IslandSlider {
                     Layout.fillWidth: true
-                    label: "Separación con el borde de la pantalla"
+                    label: Idioma.t("Separación con el borde de la pantalla")
                     suffix: " px"
                     from: 0; to: 60; step: 1
                     value: view.plugin.gapsOut
@@ -253,7 +139,7 @@ FadeIn {
 
                 IslandSlider {
                     Layout.fillWidth: true
-                    label: "Grosor del borde"
+                    label: Idioma.t("Grosor del borde")
                     suffix: " px"
                     from: 0; to: 10; step: 1
                     value: view.plugin.borderSize
@@ -262,7 +148,7 @@ FadeIn {
 
                 IslandSlider {
                     Layout.fillWidth: true
-                    label: "Redondeo de esquinas"
+                    label: Idioma.t("Redondeo de esquinas")
                     suffix: " px"
                     from: 0; to: 30; step: 1
                     value: view.plugin.rounding
@@ -300,7 +186,7 @@ FadeIn {
                         Layout.fillWidth: true
                         enabled: view.plugin.blur
                         opacity: view.plugin.blur ? 1 : 0.35
-                        label: "Radio"
+                        label: Idioma.t("Radio")
                         from: 1; to: 20; step: 1
                         value: view.plugin.blurSize
                         onMoved: function (v) { view.plugin.blurSize = v; view.touched() }
@@ -310,7 +196,7 @@ FadeIn {
                         Layout.fillWidth: true
                         enabled: view.plugin.blur
                         opacity: view.plugin.blur ? 1 : 0.35
-                        label: "Pasadas"
+                        label: Idioma.t("Pasadas")
                         from: 1; to: 6; step: 1
                         value: view.plugin.blurPasses
                         onMoved: function (v) { view.plugin.blurPasses = v; view.touched() }
@@ -341,7 +227,7 @@ FadeIn {
 
                     IslandSlider {
                         Layout.fillWidth: true
-                        label: "Opacidad de la ventana activa"
+                        label: Idioma.t("Opacidad de la ventana activa")
                         from: 0.4; to: 1; step: 0.05
                         value: view.plugin.activeOpacity
                         onMoved: function (v) { view.plugin.activeOpacity = v; view.touched() }
@@ -349,7 +235,7 @@ FadeIn {
 
                     IslandSlider {
                         Layout.fillWidth: true
-                        label: "Opacidad de las inactivas"
+                        label: Idioma.t("Opacidad de las inactivas")
                         from: 0.4; to: 1; step: 0.05
                         value: view.plugin.inactiveOpacity
                         onMoved: function (v) { view.plugin.inactiveOpacity = v; view.touched() }
@@ -372,7 +258,7 @@ FadeIn {
                         Layout.fillWidth: true
                         enabled: view.plugin.animEnabled
                         opacity: view.plugin.animEnabled ? 1 : 0.35
-                        label: "Velocidad (más alto = más rápido)"
+                        label: Idioma.t("Velocidad (más alto = más rápido)")
                         from: 1; to: 10; step: 1
                         value: view.plugin.animSpeed
                         onMoved: function (v) { view.plugin.animSpeed = v; view.touched() }
@@ -490,7 +376,7 @@ FadeIn {
                     IslandLabel {
                         anchors.centerIn: parent
                         visible: view.plugin.wallpapers.length === 0
-                        text: Idioma.t("No hay imágenes en Imágenes, Descargas ni en las carpetas del sistema")
+                        text: Idioma.t("No hay imágenes en wallpapers, Sicily-dots/wallpapers, Imágenes, Descargas ni en las carpetas del sistema")
                         color: Theme.muted
                         font.pixelSize: 12
                     }
@@ -512,10 +398,10 @@ FadeIn {
             IconGlyph {
                 text: parent.fondo
                     ? (parent.fondoDisponible && parent.fondoAplicado ? Theme.ico.check : Theme.ico.alert)
-                    : (view.plugin.isPersisted() ? Theme.ico.check : Theme.ico.alert)
+                    : Theme.ico.check
                 color: parent.fondo
                     ? (parent.fondoDisponible && parent.fondoAplicado ? Theme.green : Theme.muted)
-                    : (view.plugin.isPersisted() ? Theme.green : Theme.muted)
+                    : Theme.green
                 font.pixelSize: 12
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -527,9 +413,7 @@ FadeIn {
                             ? Idioma.t("Fondo aplicado y guardado automáticamente")
                             : Idioma.t("Selecciona una imagen para cambiar el fondo"))
                         : Idioma.t("Instala awww, swww o swaybg para aplicar fondos"))
-                    : (view.plugin.isPersisted()
-                        ? Idioma.t("Guardado en config/k4-theme.lua · sobrevive al reinicio")
-                        : Idioma.t("Aplicado solo en esta sesión · pulsa Guardar para que persista"))
+                    : Idioma.t("Los ajustes de K4 se guardan automáticamente")
                 color: Theme.muted
                 font.pixelSize: 10
                 Layout.alignment: Qt.AlignVCenter
@@ -537,32 +421,6 @@ FadeIn {
 
             Item { Layout.fillWidth: true }
 
-            Rectangle {
-                visible: !parent.fondo
-                Layout.preferredWidth: saveLabel.implicitWidth + 26
-                Layout.preferredHeight: 24
-                Layout.alignment: Qt.AlignVCenter
-                radius: 12
-                color: saveMouse.containsMouse ? Theme.blue : Theme.surfaceHi
-
-                Behavior on color { ColorAnimation { duration: 120 } }
-
-                IslandLabel {
-                    id: saveLabel
-                    anchors.centerIn: parent
-                    text: Idioma.t("Guardar")
-                    font.pixelSize: 11
-                    font.weight: Font.DemiBold
-                }
-
-                MouseArea {
-                    id: saveMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: view.plugin.persist()
-                }
-            }
         }
     }
 }

@@ -2,8 +2,7 @@
 
 {
   home.packages = with pkgs; [
-    hyprlock    # lock screen
-    hypridle    # idle daemon (triggers lock, dim, suspend)
+    hyprlock    # manual lock screen
   ];
 
   # ── hyprlock config ──────────────────────────────────────────────────────────
@@ -19,7 +18,7 @@
       background = [
         {
           monitor = "";
-          path = "$HOME/wallpapers/default.jpg";
+          path = "screenshot";
           blur_passes = 3;
           blur_size = 8;
           brightness = 0.6;
@@ -75,32 +74,4 @@
     };
   };
 
-  # ── hypridle config ──────────────────────────────────────────────────────────
-  services.hypridle = {
-    enable = true;
-    settings = {
-      general = {
-        lock_cmd = "hyprlock";
-        before_sleep_cmd = "hyprlock";
-        after_sleep_cmd = "hyprctl dispatch dpms on";
-        ignore_dbus_inhibit = false;
-      };
-
-      listener = [
-        {
-          timeout = 300;   # 5 min: dim screen
-          on-timeout = "brightnessctl -s set 30%";
-          on-resume = "brightnessctl -r";
-        }
-        {
-          timeout = 600;   # 10 min: lock screen
-          on-timeout = "hyprlock";
-        }
-        {
-          timeout = 1800;  # 30 min: suspend
-          on-timeout = "systemctl suspend";
-        }
-      ];
-    };
-  };
 }

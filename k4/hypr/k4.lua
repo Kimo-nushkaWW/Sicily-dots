@@ -35,16 +35,17 @@ end)
 ----------------------------------------------------------------------------
 -- La island
 ----------------------------------------------------------------------------
+-- hl.bind(mod .. " + SUPER_L", hl.dsp.exec_cmd(k4 .. "toggleLauncher"), { release = true })
 hl.bind(mod .. " + Space",       hl.dsp.exec_cmd(k4 .. "toggleLauncher"))
 -- El cajón de aplicaciones de la barra: lo que la propia k4 sabe abrir.
 -- Justo al lado del lanzador y a propósito: Space lanza las aplicaciones del
 -- escritorio, SHIFT+Space las de la barra. (SUPER+D, que era lo primero que
 -- se me ocurrió, ya es «pantalla completa» en la configuración de CachyOS.)
 hl.bind(mod .. " + SHIFT + Space", hl.dsp.exec_cmd(apps .. "toggle"))
-hl.bind(mod .. " + I",           hl.dsp.exec_cmd(k4 .. "togglePanel"))
+-- hl.bind(mod .. " + I",           hl.dsp.exec_cmd(k4 .. "togglePanel"))
 hl.bind(mod .. " + X",           hl.dsp.exec_cmd(k4 .. "togglePanel"))
 hl.bind(mod .. " + N",           hl.dsp.exec_cmd(k4 .. "toggleNotifications"))
-hl.bind(mod .. " + A",           hl.dsp.exec_cmd(k4 .. "toggleNotifications"))
+-- hl.bind(mod .. " + A",           hl.dsp.exec_cmd(k4 .. "toggleNotifications"))
 hl.bind(mod .. " + Z",           hl.dsp.exec_cmd(k4 .. "settings"))
 hl.bind(mod .. " + Tab",         hl.dsp.exec_cmd(k4 .. "windows"))
 hl.bind(mod .. " + SHIFT + W",   hl.dsp.exec_cmd(k4 .. "theme"))
@@ -75,8 +76,8 @@ hl.bind(mod .. " + ALT + T",     hl.dsp.exec_cmd(term .. "mudar"))
 -- se entra. Los hosts salen de ~/.ssh/config, así que lo que guardes aquí lo
 -- aprovechan también ssh, scp y git.
 --
--- Va con ALT y no con SHIFT porque SUPER+SHIFT+S ya es tuyo de antes —mandar
--- la ventana al espacio especial—, y quitártelo por esto sería una faena.
+-- Va con ALT para no competir con atajos de captura o del compositor que el
+-- usuario pueda conservar en su configuración base.
 hl.bind(mod .. " + ALT + S",     hl.dsp.exec_cmd(ssh .. "abrir"))
 
 ----------------------------------------------------------------------------
@@ -84,10 +85,13 @@ hl.bind(mod .. " + ALT + S",     hl.dsp.exec_cmd(ssh .. "abrir"))
 ----------------------------------------------------------------------------
 -- El texto seleccionado no se adjunta solo: se ofrece en la cabecera y se
 -- adjunta con Tab, con un clic en el chip, o abriendo con la última de estas.
-hl.bind(mod .. " + G",           hl.dsp.exec_cmd(k4 .. "ask"))
-hl.bind(mod .. " + SHIFT + G",   hl.dsp.exec_cmd(k4 .. "askScreen"))
-hl.bind(mod .. " + ALT + G",     hl.dsp.exec_cmd(k4 .. "askRegion"))
-hl.bind(mod .. " + CONTROL + G", hl.dsp.exec_cmd(k4 .. "askSelection"))
+-- `code:42` is the physical G position on the base US layout.  It keeps the
+-- shortcut working after switching to Russian, where the same key produces
+-- `п` instead of `g`.
+hl.bind(mod .. " + code:42",           hl.dsp.exec_cmd(k4 .. "ask"))
+hl.bind(mod .. " + SHIFT + code:42",   hl.dsp.exec_cmd(k4 .. "askScreen"))
+hl.bind(mod .. " + ALT + code:42",     hl.dsp.exec_cmd(k4 .. "askRegion"))
+hl.bind(mod .. " + CONTROL + code:42", hl.dsp.exec_cmd(k4 .. "askSelection"))
 
 ----------------------------------------------------------------------------
 -- Multimedia

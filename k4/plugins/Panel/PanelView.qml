@@ -642,7 +642,7 @@ FadeIn {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: notificationCard.modelData.dismiss()
+                            onClicked: Notifs.dismissOne(notificationCard.modelData)
                         }
                     }
                 }

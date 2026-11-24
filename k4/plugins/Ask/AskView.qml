@@ -142,14 +142,14 @@ FadeIn {
             Repeater {
                 model: [
                     { key: "image", on: view.plugin.image.length > 0, attached: true,
-                      glyph: Theme.ico.shot, label: "captura" },
+                      glyph: Theme.ico.shot, label: Idioma.t("captura") },
                     { key: "selection",
                       on: view.plugin.selection.length > 0 || view.plugin.selectionCandidate.length > 0,
                       attached: view.plugin.selection.length > 0,
                       glyph: Theme.ico.selection,
                       label: view.plugin.selection.length > 0
                           ? view.plugin.preview(view.plugin.selection)
-                          : "adjuntar: " + view.plugin.preview(view.plugin.selectionCandidate) }
+                          : Idioma.t("adjuntar: ") + view.plugin.preview(view.plugin.selectionCandidate) }
                 ]
 
                 delegate: Rectangle {
@@ -222,8 +222,8 @@ FadeIn {
             // acciones sobre la conversación
             Repeater {
                 model: [
-                    { key: "new", glyph: Theme.ico.ask, label: "nueva" },
-                    { key: "copy", glyph: Theme.ico.copy, label: "copiar" }
+                    { key: "new", glyph: Theme.ico.ask, label: Idioma.t("nueva") },
+                    { key: "copy", glyph: Theme.ico.copy, label: Idioma.t("copiar") }
                 ]
 
                 delegate: Rectangle {
@@ -344,7 +344,7 @@ FadeIn {
                     color: messageRow.mine ? Theme.surfaceHi : "transparent"
 
                     // Formato de verdad: negrita, cursiva, código y enlaces
-                    // pulsables. Antes se pedía a Codex que respondiera en
+                    // pulsables. Antes se pedía al agente que respondiera en
                     // texto plano justamente porque esto no existía.
                     TextEdit {
                         id: messageText

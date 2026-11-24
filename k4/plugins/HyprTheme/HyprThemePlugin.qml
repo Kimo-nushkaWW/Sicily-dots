@@ -1,13 +1,10 @@
 //  Tematizar Hyprland desde la island: colores, ventanas, efectos y fondo.
 //
-//  Dos caminos, mismo lenguaje. En caliente va por `hyprctl eval`, que evalúa
-//  Lua en el Hyprland vivo — `hyprctl keyword` no sirve aquí: con el parser
-//  nuevo responde "keyword can't work with non-legacy parsers".
+//  Hyprland usa el parser hyprlang, así que los cambios en caliente van por
+//  `hyprctl keyword`. `hyprctl eval` solo está disponible con el gestor Lua.
 //
-//  Para que sobreviva al reinicio, k4 es dueño de config/k4-theme.lua y lo
-//  añade al final de hyprland.lua. Al ir el último, sus valores ganan sin
-//  tocar ni una línea de la configuración de CachyOS: borras el archivo y la
-//  línea `require`, y todo vuelve a estar como estaba.
+//  La configuración de Hyprland la gestiona Nix en hyprland.lua; K4 conserva solo
+//  su estado de interfaz en ~/.local/state/k4.
 
 import QtQuick
 import K4 as K4
@@ -28,7 +25,7 @@ K4Plugin {
     grabKeyboard: open
 
     property bool open: false
-    property string tab: "tema"        // "tema" | "ventanas" | "efectos" | "fondo"
+    property string tab: "ventanas"    // "ventanas" | "efectos" | "fondo"
 
     islandWidth: 880
     islandHeight: 470
@@ -42,13 +39,9 @@ K4Plugin {
     hoverExitDelay: 1000
     onHoverTimedOut: close()
 
-    readonly property string hyprDir: K4.Sistema.entorno("HOME") + "/.config/hypr"
-    readonly property string themeFile: hyprDir + "/config/k4-theme.lua"
-    readonly property string entryFile: hyprDir + "/hyprland.lua"
     readonly property string stateFile: K4.Sistema.entorno("HOME") + "/.local/state/k4/hyprtheme.json"
 
     // ── ajustes ───────────────────────────────────────────────────
-    property string preset: "cachyos"
     property color accentFrom: "#82dccc"
     property color accentTo: "#007d6f"
     property color inactive: "#798bb2"
@@ -71,32 +64,8 @@ K4Plugin {
 
     property string wallpaper: ""
 
-    // Marca de agua: los presets solo se ven "elegidos" mientras no toques nada.
-    property bool dirty: false
-
-    readonly property var presets: [
-        { id: "cachyos", name: "CachyOS",  from: "#82dccc", to: "#007d6f", inactive: "#798bb2" },
-        { id: "noche",   name: "Noche",    from: "#5e5ce6", to: "#1c1c3a", inactive: "#3a3a4c" },
-        { id: "ambar",   name: "Ámbar",    from: "#ff9f0a", to: "#c1440e", inactive: "#5c4a3a" },
-        { id: "malva",   name: "Malva",    from: "#bf5af2", to: "#5e2b8a", inactive: "#4a3a5c" },
-        { id: "menta",   name: "Menta",    from: "#30d158", to: "#0a6b3d", inactive: "#3a5c48" },
-        { id: "acero",   name: "Acero",    from: "#98a5b8", to: "#3a4654", inactive: "#4a5462" }
-    ]
-
-    function applyPreset(id) {
-        for (let i = 0; i < presets.length; ++i) {
-            if (presets[i].id !== id)
-                continue
-
-            preset = id
-            accentFrom = presets[i].from
-            accentTo = presets[i].to
-            inactive = presets[i].inactive
-            dirty = false
-            apply()
-            return
-        }
-    }
+    readonly property string paletteFile: K4.Sistema.entorno("HOME")
+        + "/.cache/wal/colors.json"
 
     // ── color → el formato que espera Hyprland ────────────────────
     // hl.config quiere "rgba(rrggbbaa)"; QML da "#rrggbb" o "#aarrggbb".
@@ -107,74 +76,69 @@ K4Plugin {
         return "rgba(" + hex.substring(1) + "ff)"   // #rrggbb
     }
 
-    // ── el Lua que describe el tema ───────────────────────────────
-    function luaBody() {
-        return 'hl.config({\n'
-            + '    general = {\n'
-            + '        gaps_in = ' + gapsIn + ',\n'
-            + '        gaps_out = ' + gapsOut + ',\n'
-            + '        border_size = ' + borderSize + ',\n'
-            + '        col = {\n'
-            + '            active_border = { colors = { "' + hypr(accentFrom) + '", "'
-                + hypr(accentTo) + '" }, angle = ' + angle + ' },\n'
-            + '            inactive_border = "' + hypr(inactive) + '",\n'
-            + '        },\n'
-            + '    },\n'
-            + '    decoration = {\n'
-            + '        rounding = ' + rounding + ',\n'
-            + '        active_opacity = ' + activeOpacity.toFixed(2) + ',\n'
-            + '        inactive_opacity = ' + inactiveOpacity.toFixed(2) + ',\n'
-            + '        blur = {\n'
-            + '            enabled = ' + (blur ? "true" : "false") + ',\n'
-            + '            size = ' + blurSize + ',\n'
-            + '            passes = ' + blurPasses + ',\n'
-            + '        },\n'
-            + '        shadow = { enabled = ' + (shadow ? "true" : "false") + ' },\n'
-            + '    },\n'
-            + '})\n\n'
-            + 'hl.animation({ leaf = "global", enabled = ' + (animEnabled ? "true" : "false")
-                + ', speed = ' + animSpeed + ', bezier = "quick" })\n'
+    // ── paleta de wal → estado de HyprTheme ───────────────────────
+    function colorValido(valor) {
+        return typeof valor === "string"
+            && /^#[0-9a-fA-F]{6}$/.test(valor)
     }
 
-    // ── aplicar en caliente ───────────────────────────────────────
+    function cargarPaleta(bruto) {
+        let d
+        try {
+            d = JSON.parse(bruto)
+        } catch (e) {
+            return
+        }
+
+        const colors = d.colors || ({})
+        const nuevoFrom = colorValido(colors.color4) ? colors.color4 : ""
+        const nuevoTo = colorValido(colors.color12) ? colors.color12 : nuevoFrom
+        const nuevoInactive = colorValido(colors.color8) ? colors.color8 : ""
+        if (nuevoFrom.length === 0 || nuevoInactive.length === 0)
+            return
+
+        accentFrom = nuevoFrom
+        accentTo = nuevoTo
+        inactive = nuevoInactive
+        saveState()
+        apply()
+    }
+
+    // ── aplicar en caliente con el parser hyprlang ────────────────
+    function keywordBody() {
+        return "set -e\n"
+            + "hyprctl keyword general:gaps_in " + gapsIn + "\n"
+            + "hyprctl keyword general:gaps_out " + gapsOut + "\n"
+            + "hyprctl keyword general:border_size " + borderSize + "\n"
+            + "hyprctl keyword general:col.active_border '"
+                + hypr(accentFrom) + " " + hypr(accentTo) + " " + angle + "deg'\n"
+            + "hyprctl keyword general:col.inactive_border '" + hypr(inactive) + "'\n"
+            + "hyprctl keyword decoration:rounding " + rounding + "\n"
+            + "hyprctl keyword decoration:active_opacity " + activeOpacity.toFixed(2) + "\n"
+            + "hyprctl keyword decoration:inactive_opacity " + inactiveOpacity.toFixed(2) + "\n"
+            + "hyprctl keyword decoration:blur:enabled " + (blur ? "true" : "false") + "\n"
+            + "hyprctl keyword decoration:blur:size " + blurSize + "\n"
+            + "hyprctl keyword decoration:blur:passes " + blurPasses + "\n"
+            + "hyprctl keyword decoration:shadow:enabled " + (shadow ? "true" : "false") + "\n"
+            + "hyprctl keyword animations:enabled " + (animEnabled ? "true" : "false")
+    }
+
     function apply() {
-        evalProcess.command = ["hyprctl", "eval", luaBody()]
-        evalProcess.running = true
+        applyProcess.command = ["sh", "-c", keywordBody()]
+        applyProcess.running = true
         saveState()
     }
 
     // ── persistir ─────────────────────────────────────────────────
-    function persist() {
-        themeView.setText(
-            '-- Generado por k4 · módulo HyprTheme.\n'
-            + '-- No lo edites a mano: se reescribe cada vez que guardas desde la barra.\n'
-            + '-- Para revertirlo: borra este archivo y su línea require de hyprland.lua.\n\n'
-            + luaBody())
-
-        ensureRequire()
-        saveState()
-    }
-
-    // Añade el require al final de hyprland.lua si no está. Va el último a
-    // propósito: lo que se aplica después es lo que manda.
-    function ensureRequire() {
-        const current = entryView.text()
-        if (current.length === 0 || current.indexOf("config.k4-theme") !== -1)
-            return
-
-        entryView.setText(current.replace(/\s*$/, "")
-            + '\n\n-- k4: tema gestionado desde la barra (debe ir el último)\n'
-            + 'require("config.k4-theme")\n')
-    }
+    function persist() { saveState() }
 
     function isPersisted() {
-        return entryView.text().indexOf("config.k4-theme") !== -1
+        return stateView.text().length > 0
     }
 
     // ── estado propio, para reabrir con los mismos valores ────────
     function saveState() {
         stateView.setText(JSON.stringify({
-            preset: preset,
             accentFrom: String(accentFrom),
             accentTo: String(accentTo),
             inactive: String(inactive),
@@ -183,8 +147,7 @@ K4Plugin {
             blur: blur, blurSize: blurSize, blurPasses: blurPasses,
             activeOpacity: activeOpacity, inactiveOpacity: inactiveOpacity, shadow: shadow,
             animEnabled: animEnabled, animSpeed: animSpeed,
-            wallpaper: wallpaper,
-            dirty: dirty
+            wallpaper: wallpaper
         }, null, 2))
     }
 
@@ -200,7 +163,6 @@ K4Plugin {
             return
         }
 
-        preset = s.preset !== undefined ? s.preset : preset
         accentFrom = s.accentFrom !== undefined ? s.accentFrom : accentFrom
         accentTo = s.accentTo !== undefined ? s.accentTo : accentTo
         inactive = s.inactive !== undefined ? s.inactive : inactive
@@ -218,8 +180,7 @@ K4Plugin {
         animEnabled = s.animEnabled !== undefined ? s.animEnabled : animEnabled
         animSpeed = s.animSpeed !== undefined ? s.animSpeed : animSpeed
         wallpaper = s.wallpaper !== undefined ? s.wallpaper : wallpaper
-        dirty = s.dirty === true
-
+        apply()
         // Si el detector del daemon terminó antes de leer el estado, no
         // habrá cambio de wallTool que dispare la aplicación; cubrimos ese
         // orden de inicialización también.
@@ -234,6 +195,8 @@ K4Plugin {
     property var wallpapers: []
 
     readonly property var wallDirs: [
+        K4.Sistema.entorno("HOME") + "/wallpapers",
+        K4.Sistema.entorno("HOME") + "/Sicily-dots/wallpapers",
         K4.Sistema.entorno("HOME") + "/Imágenes",
         K4.Sistema.entorno("HOME") + "/Pictures",
         K4.Sistema.entorno("HOME") + "/Descargas",
@@ -263,15 +226,34 @@ K4Plugin {
     }
 
     function setWallpaper(path) {
+        setWallpaperWithPalette(path, true)
+    }
+
+    function setWallpaperWithPalette(path, actualizarTema) {
         if (path.length === 0)
             return
 
-        // El clic es la acción completa: se actualiza la sesión y se escribe
-        // solo el estado del fondo inmediatamente, sin guardar de rebote otros
-        // retoques del tema. onWallToolChanged lo aplicará cuando esté listo.
+        // El script externo ya ejecuta matugen y wal antes de llamar a este
+        // IPC. Un clic en la cuadrícula no pasa por ese script, por eso aquí se
+        // regenera la paleta solo en ese caso.
+        if (actualizarTema) {
+            // Un clic desde K4 debe usar exactamente la misma cadena que el
+            // alias `wallpaper`: además de awww/matugen/wal, crea el include
+            // de Foot y vuelve a entrar por este plugin mediante IPC.
+            K4.Sistema.lanzar([
+                K4.Sistema.entorno("HOME") + "/.local/bin/wallpaper", path
+            ])
+        }
+
         wallpaper = path
         saveState()
         applyWallpaper(path)
+    }
+
+    function recargarPaleta() {
+        paletteView.reload()
+        if (K4.Puente.tema)
+            K4.Puente.tema.recargarPaleta()
     }
 
     function refreshWallpapers() {
@@ -298,6 +280,7 @@ K4Plugin {
     // igual abriendo desde el panel, por IPC o saltando directo a la pestaña.
     onOpenChanged: if (open) refreshWallpapers()
     onTabChanged: if (tab === "fondo") refreshWallpapers()
+    onWallpaperChanged: if (open && tab === "fondo") refreshWallpapers()
     onWallToolChanged: if (wallTool.length > 0 && wallpaper.length > 0)
         applyWallpaper(wallpaper)
 
@@ -307,11 +290,17 @@ K4Plugin {
     property var panel: null
 
     // ── archivos ──────────────────────────────────────────────────
-    K4.Fichero { id: themeView; path: self.themeFile }
-    K4.Fichero { id: entryView; path: self.entryFile; blockLoading: true }
     K4.Fichero { id: stateView; path: self.stateFile; blockLoading: true }
 
-    K4.Process { id: evalProcess }
+    K4.Process { id: applyProcess }
+
+    K4.Fichero {
+        id: paletteView
+        path: self.paletteFile
+        watchChanges: true
+        onLoaded: self.cargarPaleta(text())
+        onFileChanged: reload()
+    }
 
     K4.Process {
         // el estado vive en ~/.local/state/k4, que puede no existir aún
@@ -350,12 +339,14 @@ K4Plugin {
         function close(): void { self.close() }
         function apply(): void { self.apply() }
         function save(): void { self.persist() }
-        function preset(id: string): void { self.applyPreset(id) }
         function tab(name: string): void {
             self.open = true
             self.tab = name
         }
-        function wallpaper(path: string): void { self.setWallpaper(path) }
+        function wallpaper(path: string): void {
+            self.setWallpaperWithPalette(path, false)
+            self.recargarPaleta()
+        }
     }
 
     view: Component {

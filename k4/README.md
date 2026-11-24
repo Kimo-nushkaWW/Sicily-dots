@@ -196,12 +196,27 @@ That file is owned by k4; put your overrides after it.
 | `SUPER + B` | File browser |
 | `SUPER + K` | Shortcut viewer |
 | `SUPER + L` | Lock screen |
-| `SUPER + G` | Ask Codex |
+| `SUPER + G` | Ask Gemini (API) |
 | `SUPER + C` | Capture a region |
 | `SUPER + Shift + C` | Start/stop recording |
 | `SUPER + Shift + E` | Open the video editor |
 | `SUPER + Shift + T` | Terminal in the island (sessions kept alive) |
 | `SUPER + Alt + T` | Pop that session out into a window |
+
+### Gemini API for `SUPER + G`
+
+`SUPER + G` uses the Gemini REST API. Keep the key outside the flake and Git:
+
+```fish
+mkdir -p ~/.config/environment.d
+read --silent --prompt-str 'Gemini API key: ' GEMINI_API_KEY
+printf 'GEMINI_API_KEY=%s\n' "$GEMINI_API_KEY" > ~/.config/environment.d/gemini.conf
+chmod 600 ~/.config/environment.d/gemini.conf
+set -e GEMINI_API_KEY
+```
+
+Restart K4 after saving the file. `GEMINI_MODEL` may be set to override the
+default `gemini-3.6-flash`.
 | `Print` / `Shift + Print` / `Ctrl + Print` | Region / screen / window capture |
 
 </details>
@@ -221,7 +236,7 @@ publish them.
 |---|---|
 | `k4` | `toggleLauncher`, `togglePanel`, `windows`, `settings`, `lock` |
 | `k4.panel` | `toggle`, `notifications`, `wifi`, `bluetooth`, `close` |
-| `k4.theme` | `toggle`, `tab`, `preset`, `wallpaper`, `apply`, `save` |
+| `k4.theme` | `toggle`, `tab`, `wallpaper`, `apply`, `save` |
 | `k4.captura` | `menu`, `region`, `grabar`, `parar`, `grande` |
 | `k4.editor` | `abrir`, `editar`, `retomar`, `imagen`, `formato`, `silencios` |
 | `k4.term` | `isla`, `nueva`, `siguiente`, `anterior`, `irA`, `ejecutar` |

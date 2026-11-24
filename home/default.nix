@@ -10,7 +10,6 @@
     ./vscodium.nix
     ./nautilus.nix
     ./hyprlock.nix
-    ./screenshots.nix
     ./fonts.nix
     ./dev.nix
   ];
@@ -30,7 +29,15 @@
   # ~/.local/bin on PATH (wallpaper script, etc.)
   home.sessionPath = [ "$HOME/.local/bin" ];
 
-  # Global env vars visible to all Wayland apps
+  # Keep the Fastfetch layout in the flake so an older external Caelestia
+  # checkout cannot override it.
+  home.file.".config/fastfetch/config.jsonc" = {
+    source = ../fastfetch/config.jsonc;
+  };
+
+  # Global env vars visible to all Wayland apps.  K4 owns the wallpaper
+  # palette; ordinary applications follow the separate system light/dark
+  # preference instead of inheriting wallpaper colours.
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";          # electron/chromium Wayland
     MOZ_ENABLE_WAYLAND = "1";      # firefox
@@ -40,6 +47,5 @@
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_TYPE = "wayland";
     XDG_SESSION_DESKTOP = "Hyprland";
-    GTK_THEME = "adw-gtk3-dark";   # updated by matugen on wallpaper change
   };
 }

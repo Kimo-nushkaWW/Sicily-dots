@@ -17,6 +17,7 @@ sección pertenece.
 import json
 import os
 import re
+import subprocess
 import sys
 
 CONFIG = os.path.expanduser("~/.config/hypr/config")
@@ -249,6 +250,84 @@ def leer():
     return salida
 
 
+MODIFICADORES = (
+    (64, "SUPER"),
+    (8, "ALT"),
+    (4, "CTRL"),
+    (1, "SHIFT"),
+)
+
+# Hyprland leaves `key` empty for a physical `code:N` bind.  These are the
+# Wayland/XKB keycodes used by the letter row; keep the small translation here
+# so the live list remains useful while the bind works in every layout.
+KEYCODES = {
+    24: "Q", 25: "W", 26: "E", 27: "R", 28: "T", 29: "Y",
+    30: "U", 31: "I", 32: "O", 33: "P", 38: "A", 39: "S",
+    40: "D", 41: "F", 42: "G", 43: "H", 44: "J", 45: "K",
+    46: "L", 52: "Z", 53: "X", 54: "C", 55: "V", 56: "B",
+    57: "N", 58: "M",
+}
+
+
+def combinacion_runtime(bind):
+    """Devuelve la combinación que Hyprland tiene registrada ahora."""
+    partes = [nombre for mascara, nombre in MODIFICADORES
+              if int(bind.get("modmask", 0)) & mascara]
+    tecla = str(bind.get("key", "")).strip()
+    if not tecla:
+        tecla = KEYCODES.get(int(bind.get("keycode", 0)), "")
+    if tecla:
+        partes.append(tecla)
+    return "+".join(partes)
+
+
+def describir_runtime(bind):
+    """Convierte un bind JSON vivo en una descripción legible."""
+    dispatcher = str(bind.get("dispatcher", "")).strip()
+    argumento = str(bind.get("arg", "")).strip()
+
+    if dispatcher == "exec":
+        if "quickshell ipc" in argumento and "call k4" in argumento:
+            match = re.search(r"call\s+k4(?:\.([\w-]+))?\s+(.+)$", argumento)
+            if match:
+                modulo = (match.group(1) + " · ") if match.group(1) else ""
+                return "k4 · " + modulo + match.group(2).strip()
+        return argumento[:100]
+
+    base = VERBOS.get(dispatcher,
+                      dispatcher.replace(".", " · ").replace("_", " "))
+    return base + (" · " + argumento if argumento else "")
+
+
+def leer_runtime():
+    """Lee la configuración efectiva; no depende de rutas Lua antiguas."""
+    try:
+        proc = subprocess.run(
+            ["hyprctl", "-j", "binds"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        datos = json.loads(proc.stdout)
+    except (OSError, subprocess.CalledProcessError, json.JSONDecodeError):
+        return []
+
+    salida = []
+    for bind in datos:
+        combo = combinacion_runtime(bind)
+        if not combo:
+            continue
+        argumento = str(bind.get("arg", ""))
+        seccion = ("K4" if "quickshell ipc" in argumento
+                   or argumento.startswith("k4:") else "Hyprland")
+        salida.append({
+            "combo": combo,
+            "hace": describir_runtime(bind),
+            "seccion": seccion,
+        })
+    return salida
+
+
 def leer_fichero(lineas, vals):
     salida = []
     seccion = "General"
@@ -305,7 +384,9 @@ def leer_fichero(lineas, vals):
 
 
 def main():
-    atajos = leer()
+    # `hyprctl` es la fuente de verdad con el parser hyprlang actual. El
+    # parser Lua queda solo como respaldo para el instalador antiguo.
+    atajos = leer_runtime() or leer()
     print(json.dumps({"total": len(atajos), "atajos": atajos}), flush=True)
 
 

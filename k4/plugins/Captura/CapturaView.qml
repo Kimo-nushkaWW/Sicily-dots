@@ -55,7 +55,7 @@ FadeIn {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 18
+            Layout.preferredHeight: 28
             spacing: 8
 
             IslandLabel {
@@ -70,6 +70,11 @@ FadeIn {
                 glyph: Theme.ico.close
                 glyphSize: 13
                 glyphColor: Theme.muted
+                // MediaButton is taller than the compact title row. Give the
+                // hit target its real height so the glyph is not clipped by
+                // the row when this menu is rendered at the top of the island.
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
                 onActivated: view.plugin.close()
             }
         }
@@ -192,6 +197,14 @@ FadeIn {
             }
 
             Item { Layout.fillWidth: true }
+        }
+
+        // La grabación y la ayuda ocupan su propia fila: en ruso «Сохранить»
+        // y «Оба» no pueden empujar el botón de grabación fuera de la island.
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 24
+            spacing: 8
 
             // Grabar vive aquí y no como una cuarta tarjeta arriba: es otra
             // cosa —empieza algo que dura— y mezclarlo con las tres de foto
@@ -243,6 +256,8 @@ FadeIn {
                     }
                 }
             }
+
+            Item { Layout.fillWidth: true }
 
             IslandLabel {
                 text: Idioma.t("← → elige · intro captura")
@@ -352,7 +367,9 @@ FadeIn {
             Item { Layout.fillHeight: true }
 
             RowLayout {
+                id: fotoAcciones
                 spacing: 6
+                z: 2
 
                 Repeater {
                     model: [
@@ -368,10 +385,20 @@ FadeIn {
 
                         // Sin fichero en disco no hay nada que anotar ni que
                         // abrir: solo quedaría en el portapapeles.
-                        readonly property bool util: Captura.ultimaRuta.length > 0
+                        readonly property bool hayFichero:
+                            Captura.ultimaRuta.length > 0
+                        readonly property bool util:
+                            boton.modelData.accion === "copiar"
+                                ? (boton.hayFichero
+                                   || Captura.ultimaRutaCopia.length > 0)
+                                : boton.modelData.accion === "carpeta"
+                                  ? (boton.hayFichero
+                                     || Captura.carpetaFotos.length > 0)
+                                  : boton.hayFichero
 
                         Layout.preferredWidth: botonFila.implicitWidth + 16
                         Layout.preferredHeight: 24
+                        z: 2
                         radius: 12
                         opacity: util ? 1 : 0.35
                         color: botonRaton.containsMouse && util
@@ -399,7 +426,9 @@ FadeIn {
                             anchors.fill: parent
                             hoverEnabled: true
                             enabled: boton.util
+                            acceptedButtons: Qt.LeftButton
                             cursorShape: Qt.PointingHandCursor
+                            z: 3
                             onClicked: {
                                 const a = boton.modelData.accion
                                 if (a === "anotar")       Captura.anotar(Captura.ultimaRuta)
@@ -463,6 +492,7 @@ FadeIn {
 
             RowLayout {
                 spacing: 6
+                z: 2
 
                 Repeater {
                     model: [
@@ -478,6 +508,7 @@ FadeIn {
 
                         Layout.preferredWidth: videoBotonFila.implicitWidth + 16
                         Layout.preferredHeight: 24
+                        z: 2
                         radius: 12
                         opacity: util ? 1 : 0.35
                         color: videoBotonRaton.containsMouse && util
@@ -505,7 +536,9 @@ FadeIn {
                             anchors.fill: parent
                             hoverEnabled: true
                             enabled: videoBoton.util
+                            acceptedButtons: Qt.LeftButton
                             cursorShape: Qt.PointingHandCursor
+                            z: 3
                             onClicked: {
                                 const a = videoBoton.modelData.accion
                                 if (a === "editor")       view.plugin.editarUltimaGrabacion()

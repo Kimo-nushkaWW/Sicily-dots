@@ -1,0 +1,3 @@
+# Tipos del plugin Notas.
+NotasPlugin 1.0 NotasPlugin.qml
+NotasView 1.0 NotasView.qml
